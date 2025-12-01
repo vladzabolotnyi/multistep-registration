@@ -1,10 +1,15 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "./index.css";
+import App from "./App.tsx";
+import { RegistrationPage } from "./pages/RegistrationPage.tsx";
 
-createRoot(document.getElementById('root')!).render(
+// TODO: Add router and lazy loading of page component
+//
+// TODO: Remove Strict Mode after development
+
+createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
+    <RegistrationPage />
   </StrictMode>,
-)
+);
