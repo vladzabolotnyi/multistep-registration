@@ -6,7 +6,6 @@ interface FormContextType {
     currentStep: FormStep
     errors: Record<string, string>
     isLoading: boolean
-    updateFormData: (data: Partial<FormData>) => void
     setCurrentStep: (step: FormStep) => void
     setErrors: (errors: Record<string, string>) => void
     setIsLoading: (loading: boolean) => void
@@ -16,19 +15,14 @@ interface FormContextType {
 }
 
 const defaultFormData: FormData = {
-    // Step 1
     firstName: '',
     lastName: '',
     email: '',
     phoneNumber: '',
-
-    // Step 2
     streetAddress: '',
     city: '',
     state: '',
     country: '',
-
-    // Step 3
     username: '',
     password: '',
     confirmPassword: '',
@@ -38,11 +32,8 @@ const defaultFormData: FormData = {
 
 const FormContext = createContext<FormContextType | undefined>(undefined)
 
-// TODO: Current implementation is using local storage to store form data but I'd like to store data in memory because
-// the form has data like password..
 export const FormProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [formData, setFormData] = useState<FormData>(() => {
-        // Try to load from localStorage on initial render
         const saved = localStorage.getItem('registration-form')
         return saved ? JSON.parse(saved) : defaultFormData
     })
@@ -51,8 +42,8 @@ export const FormProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [isLoading, setIsLoading] = useState(false)
 
-    // Save to localStorage whenever formData changes
-    const updateFormData = useCallback((data: Partial<FormData>) => {
+    // Only update formData when moving between steps or on submit
+    const updateFormDataForReview = useCallback((data: Partial<FormData>) => {
         setFormData((prev) => {
             const updated = { ...prev, ...data }
             localStorage.setItem('registration-form', JSON.stringify(updated))
@@ -86,7 +77,6 @@ export const FormProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 currentStep,
                 errors,
                 isLoading,
-                updateFormData,
                 setCurrentStep,
                 setErrors,
                 setIsLoading,

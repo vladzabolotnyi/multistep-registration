@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { useForm, FormProvider } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import ProgressBar from '../common/ProgressBar'
 import Button from '../common/Button'
 import Alert from '../common/Alert'
@@ -9,7 +10,13 @@ import Step3Account from '../forms/Step3Account'
 import ReviewStep from '../forms/ReviewStep'
 import { useFormContext } from '../../contexts/FormContext'
 import { STEPS } from '../../utils/constants'
-import { FaArrowLeft, FaArrowRight, FaPaperPlane } from 'react-icons/fa'
+import { FaArrowLeft, FaArrowRight } from 'react-icons/fa'
+import {
+    personalInfoSchema,
+    addressSchema,
+    accountSchema,
+    combinedSchema,
+} from '../../lib/validation/schemas'
 
 const MultiStepForm: React.FC = () => {
     const {
@@ -17,43 +24,56 @@ const MultiStepForm: React.FC = () => {
         currentStep,
         errors,
         isLoading,
-        updateFormData,
         setCurrentStep,
         setErrors,
+        setIsLoading,
+        clearForm,
         nextStep,
         prevStep,
-        clearForm,
     } = useFormContext()
 
-    // Initialize react-hook-form
+    const getStepSchema = () => {
+        switch (currentStep) {
+            case 1:
+                return personalInfoSchema
+            case 2:
+                return addressSchema
+            case 3:
+                return accountSchema
+            case 4:
+                return combinedSchema
+            default:
+                return undefined
+        }
+    }
+
     const methods = useForm({
         defaultValues: formData,
         mode: 'onChange',
+        resolver: getStepSchema() ? zodResolver(getStepSchema()!) : undefined,
     })
 
-    // Update form values when formData changes
-    useEffect(() => {
-        methods.reset(formData)
-    }, [formData, methods])
-
-    // Watch for form changes to update context
-    useEffect(() => {
-        const subscription = methods.watch((value) => {
-            updateFormData(value as any)
-        })
-        return () => subscription.unsubscribe()
-    }, [methods, updateFormData])
-
-    // Handle step navigation
-    const handleNext = async () => {
-        // Trigger validation for current step
-        const isValid = await methods.trigger(getStepFields(currentStep))
+    const saveFormData = async () => {
+        const formValues = methods.getValues()
+        const isValid = await methods.trigger()
 
         if (isValid) {
-            setErrors({}) // Clear errors
+            // TODO: Replace local storage with memory
+            localStorage.setItem('registration-form', JSON.stringify(formValues))
+        }
+
+        return isValid
+    }
+
+    const handleNext = async () => {
+        if (currentStep === 4) return
+
+        const isValid = await saveFormData()
+
+        if (isValid) {
+            setErrors({})
             nextStep()
         } else {
-            // Collect validation errors
             const formErrors = methods.formState.errors
             const errorMessages: Record<string, string> = {}
 
@@ -67,46 +87,52 @@ const MultiStepForm: React.FC = () => {
         }
     }
 
-    const handlePrev = () => {
-        setErrors({}) // Clear errors when going back
+    const handlePrev = async () => {
+        await saveFormData()
+        setErrors({})
         prevStep()
     }
 
     const handleStepClick = async (step: number) => {
         if (step < currentStep) {
-            // Allow going back to previous steps
+            await saveFormData()
             setCurrentStep(step as any)
             setErrors({})
         } else if (step === currentStep + 1) {
-            // Only allow going forward if current step is valid
             await handleNext()
         }
     }
 
     const handleSubmit = async () => {
-        // This will be implemented when we connect to the Go API
-        console.log('Submitting form:', formData)
-        // For now, just show success and reset
-        alert('Registration submitted successfully! (Backend integration pending)')
-        clearForm()
-        methods.reset()
-    }
+        setIsLoading(true)
+        try {
+            const formValues = methods.getValues()
 
-    // Helper to get fields for each step
-    const getStepFields = (step: number): string[] => {
-        switch (step) {
-            case 1:
-                return ['firstName', 'lastName', 'email', 'phoneNumber']
-            case 2:
-                return ['streetAddress', 'city', 'state', 'country']
-            case 3:
-                return ['username', 'password', 'confirmPassword', 'acceptTerms']
-            default:
-                return []
+            const isValid = await methods.trigger()
+            if (!isValid) {
+                alert('Please fix validation errors before submitting.')
+                return
+            }
+
+            console.log('Submitting form:', formValues)
+
+            // Simulate API call
+            await new Promise((resolve) => setTimeout(resolve, 1500))
+
+            // Show success message
+            alert('Registration submitted successfully! (Backend integration pending)')
+
+            clearForm()
+            methods.reset(defaultFormData)
+            setCurrentStep(1)
+        } catch (error) {
+            console.error('Submission error:', error)
+            alert('Error submitting form. Please try again.')
+        } finally {
+            setIsLoading(false)
         }
     }
 
-    // Render current step component
     const renderStep = () => {
         switch (currentStep) {
             case 1:
@@ -116,10 +142,28 @@ const MultiStepForm: React.FC = () => {
             case 3:
                 return <Step3Account />
             case 4:
-                return <ReviewStep onSubmit={handleSubmit} />
+                return (
+                    <ReviewStep onSubmit={handleSubmit} formData={methods.getValues()} />
+                )
             default:
                 return null
         }
+    }
+
+    const defaultFormData = {
+        firstName: '',
+        lastName: '',
+        email: '',
+        phoneNumber: '',
+        streetAddress: '',
+        city: '',
+        state: '',
+        country: '',
+        username: '',
+        password: '',
+        confirmPassword: '',
+        acceptTerms: false,
+        newsletter: false,
     }
 
     return (
@@ -134,20 +178,26 @@ const MultiStepForm: React.FC = () => {
                     />
                 </div>
 
-                {/* Error Alert */}
-                {Object.keys(errors).length > 0 && (
+                <div className="pb-4 border-b border-gray-200">
+                    <h2 className="text-xl font-semibold text-gray-800">
+                        {STEPS.find((s) => s.number === currentStep)?.title}
+                    </h2>
+                    <p className="mt-1 text-sm text-gray-600">
+                        Step {currentStep} of {STEPS.length}
+                    </p>
+                </div>
+
+                {Object.keys(errors).length > 0 && currentStep !== 4 && (
                     <Alert
                         type="error"
-                        title="Validation Error"
-                        message="Please fix the errors below before proceeding."
+                        title="Please fix the following errors:"
+                        message="All required fields must be filled correctly before proceeding."
                         onClose={() => setErrors({})}
                     />
                 )}
 
-                {/* Current Step Content */}
                 <div className="min-h-[400px]">{renderStep()}</div>
 
-                {/* Navigation Buttons */}
                 {currentStep !== 4 && (
                     <div className="flex justify-between pt-6 border-t border-gray-200">
                         <div>
@@ -167,7 +217,16 @@ const MultiStepForm: React.FC = () => {
                         <div className="flex items-center space-x-4">
                             <Button
                                 variant="ghost"
-                                onClick={clearForm}
+                                onClick={() => {
+                                    if (
+                                        window.confirm(
+                                            'Are you sure you want to clear the form? All data will be lost.',
+                                        )
+                                    ) {
+                                        clearForm()
+                                        methods.reset(defaultFormData)
+                                    }
+                                }}
                                 disabled={isLoading}
                                 className="text-gray-600 hover:text-gray-800"
                             >
@@ -186,14 +245,6 @@ const MultiStepForm: React.FC = () => {
                         </div>
                     </div>
                 )}
-
-                {/* Form Status */}
-                <div className="mt-4 text-sm text-center text-gray-500">
-                    <p>
-                        Step {currentStep} of {STEPS.length}
-                        {currentStep < 4 && ' - Data is saved locally as you progress'}
-                    </p>
-                </div>
             </div>
         </FormProvider>
     )
