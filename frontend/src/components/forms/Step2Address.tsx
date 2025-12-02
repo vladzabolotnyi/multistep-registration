@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react'
+import React, { useEffect, useMemo, useCallback } from 'react'
 import { useFormContext } from 'react-hook-form'
 import Input from '../common/Input'
 import Select from '../common/Select'
@@ -13,6 +13,7 @@ import {
     FaSpinner,
 } from 'react-icons/fa'
 import { useLocation } from '../../contexts/LocationContext'
+import { useEmailDomainValidation } from '../../hooks/useEmailDomainValidation'
 
 const Step2Address: React.FC = () => {
     const {
@@ -41,8 +42,7 @@ const Step2Address: React.FC = () => {
         clearError,
     } = useLocation()
 
-    const [emailDomainError, setEmailDomainError] = useState<string>('')
-    const [isRefreshing, setIsRefreshing] = useState(false)
+    const emailValidation = useEmailDomainValidation(email, countryCode)
 
     const countryOptions = useMemo(() => {
         return countries.map((country) => ({
@@ -58,40 +58,16 @@ const Step2Address: React.FC = () => {
         }))
     }, [states])
 
-    const selectedCountry = useMemo(() => {
-        return countries.find((c) => c.code === countryCode) || null
-    }, [countries, countryCode])
-
     useEffect(() => {
         if (countryCode) {
             loadStates(countryCode)
-
-            if (selectedCountry?.tlds?.length && email) {
-                const isValidDomain = selectedCountry.tlds.some((tld) =>
-                    email.toLowerCase().endsWith(tld.toLowerCase()),
-                )
-
-                if (!isValidDomain) {
-                    setEmailDomainError(
-                        `Email should end with ${selectedCountry.tlds.join(' or ')} for ${selectedCountry.name}`,
-                    )
-                } else {
-                    setEmailDomainError('')
-                }
-            } else {
-                setEmailDomainError('')
-            }
         }
-    }, [countryCode, email, selectedCountry, loadStates])
+    }, [countryCode, loadStates])
 
     useEffect(() => {
         if (countryCode && !isLoading && countries.length > 0) {
             const countryExists = countries.some((c) => c.code === countryCode)
-
             if (!countryExists) {
-                console.warn(
-                    `Selected country ${countryCode} not found in loaded countries`,
-                )
                 setValue('country', '')
             }
         }
@@ -111,38 +87,13 @@ const Step2Address: React.FC = () => {
     )
 
     const handleRefresh = async () => {
-        setIsRefreshing(true)
-        try {
-            await refreshCountries()
-        } finally {
-            setIsRefreshing(false)
-        }
+        await refreshCountries()
     }
 
     const getFieldStatus = (fieldName: string, value: string) => {
         if (errors[fieldName]) return 'error'
         if (dirtyFields[fieldName] && value && !errors[fieldName]) return 'success'
         return 'default'
-    }
-
-    const getCountryPlaceholder = () => {
-        if (isLoading) return 'Loading countries...'
-        if (countries.length === 0) return 'No countries available'
-        return 'Select your country'
-    }
-
-    const getStatePlaceholder = () => {
-        if (isLoading) return 'Loading...'
-        if (!countryCode) return 'Select country first'
-        if (states.length === 0) return 'No states available'
-        return 'Select your state/province'
-    }
-
-    const getStateHelperText = () => {
-        if (isLoading) return 'Loading states...'
-        if (!countryCode) return 'Please select a country first'
-        if (states.length === 0) return 'No states/provinces for this country'
-        return ''
     }
 
     return (
@@ -161,11 +112,11 @@ const Step2Address: React.FC = () => {
                 />
             )}
 
-            {emailDomainError && (
+            {!emailValidation.isValid && emailValidation.error && (
                 <Alert
                     type="error"
                     title="Email Domain Mismatch"
-                    message={emailDomainError}
+                    message={emailValidation.error}
                 />
             )}
 
@@ -197,7 +148,9 @@ const Step2Address: React.FC = () => {
                     <Select
                         label="Country"
                         options={countryOptions}
-                        placeholder={getCountryPlaceholder()}
+                        placeholder={
+                            isLoading ? 'Loading countries...' : 'Select your country'
+                        }
                         error={errors.country?.message as string}
                         {...register('country')}
                         onChange={handleCountryChange}
@@ -207,14 +160,13 @@ const Step2Address: React.FC = () => {
                         disabled={isLoading}
                         value={countryCode}
                     />
-
                     <div className="absolute right-0 top-8">
                         <Button
                             variant="ghost"
                             size="sm"
                             onClick={handleRefresh}
-                            isLoading={isLoading || isRefreshing}
-                            disabled={isLoading || isRefreshing}
+                            isLoading={isLoading}
+                            disabled={isLoading}
                             className="p-2"
                             title="Refresh countries data"
                         >
@@ -228,10 +180,24 @@ const Step2Address: React.FC = () => {
                 <Select
                     label="State/Province"
                     options={stateOptions}
-                    placeholder={getStatePlaceholder()}
+                    placeholder={
+                        isLoading
+                            ? 'Loading...'
+                            : !countryCode
+                              ? 'Select country first'
+                              : states.length === 0
+                                ? 'No states available'
+                                : 'Select your state/province'
+                    }
                     error={errors.state?.message as string}
                     {...register('state')}
-                    helperText={getStateHelperText()}
+                    helperText={
+                        !countryCode
+                            ? 'Please select a country first'
+                            : states.length === 0
+                              ? 'No states/provinces for this country'
+                              : ''
+                    }
                     required={states.length > 0}
                     leftIcon={<FaFlag />}
                     showSuccess={getFieldStatus('state', stateValue) === 'success'}

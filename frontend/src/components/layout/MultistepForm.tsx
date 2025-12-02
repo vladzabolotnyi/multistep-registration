@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useForm, FormProvider } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import ProgressBar from '../common/ProgressBar'
@@ -11,13 +11,24 @@ import ReviewStep from '../forms/ReviewStep'
 import { useFormContext } from '../../contexts/FormContext'
 import { STEPS } from '../../utils/constants'
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa'
-import {
-    personalInfoSchema,
-    addressSchema,
-    accountSchema,
-    combinedSchema,
-} from '../../lib/validation/schemas'
-import { useLocation } from '../../contexts/LocationContext'
+import { getStepSchema } from '../../lib/validation/stepSchemas'
+import { useStepValidation } from '../../hooks/useStepValidation'
+
+const defaultFormData = {
+    firstName: '',
+    lastName: '',
+    email: '',
+    phoneNumber: '',
+    streetAddress: '',
+    city: '',
+    state: '',
+    country: '',
+    username: '',
+    password: '',
+    confirmPassword: '',
+    acceptTerms: false,
+    newsletter: false,
+}
 
 const MultiStepForm: React.FC = () => {
     const {
@@ -32,36 +43,37 @@ const MultiStepForm: React.FC = () => {
         nextStep,
         prevStep,
     } = useFormContext()
-    const { countries } = useLocation()
-
-    const getStepSchema = () => {
-        switch (currentStep) {
-            case 1:
-                return personalInfoSchema
-            case 2:
-                return addressSchema
-            case 3:
-                return accountSchema
-            case 4:
-                return combinedSchema
-            default:
-                return undefined
-        }
-    }
 
     const methods = useForm({
         defaultValues: formData,
         mode: 'onChange',
-        resolver: getStepSchema() ? zodResolver(getStepSchema()!) : undefined,
+        resolver: zodResolver(getStepSchema(currentStep)),
     })
 
-    const saveFormData = async () => {
+    const { validateStep } = useStepValidation({
+        currentStep,
+        methods,
+    })
+
+    useEffect(() => {
+        const schema = getStepSchema(currentStep)
+        if (schema) {
+            methods.clearErrors()
+        }
+    }, [currentStep])
+
+    useEffect(() => {
+        methods.reset(formData, { keepErrors: true })
+    }, [formData])
+
+    const saveFormData = async (): Promise<boolean> => {
         const formValues = methods.getValues()
         const isValid = await methods.trigger()
 
         if (isValid) {
-            // TODO: Replace local storage with memory
-            localStorage.setItem('registration-form', JSON.stringify(formValues))
+            // TODO:  Store in memory instead of localStorage
+            // This will be handled by FormContext
+            return true
         }
 
         return isValid
@@ -70,101 +82,9 @@ const MultiStepForm: React.FC = () => {
     const handleNext = async () => {
         if (currentStep === 4) return
 
-        if (currentStep === 2) {
-            const email = methods.getValues('email')
-            const country = methods.getValues('country')
+        const isValid = await validateStep()
 
-            if (email && country) {
-                const selectedCountry = countries.find((c) => c.code === country)
-                if (selectedCountry?.tlds?.length) {
-                    const isValidDomain = selectedCountry.tlds.some((tld) =>
-                        email.toLowerCase().endsWith(tld.toLowerCase()),
-                    )
-
-                    if (!isValidDomain) {
-                        const errorMsg = `Email domain should end with ${selectedCountry.tlds.join(' or ')} for ${selectedCountry.name}`
-                        methods.setError('email', {
-                            type: 'manual',
-                            message: errorMsg,
-                        })
-
-                        setErrors({
-                            email: errorMsg,
-                            ...methods.formState.errors,
-                        })
-
-                        return
-                    }
-                }
-            }
-        }
-
-        if (currentStep === 3) {
-            const username = methods.getValues('username')
-
-            if (username.length < 6) {
-                methods.setError('username', {
-                    type: 'manual',
-                    message: 'Username must be at least 6 characters',
-                })
-                return
-            }
-
-            // TODO: Update this logic. Now its mocked
-            const TAKEN_USERNAMES = [
-                'john_doe',
-                'admin',
-                'testuser',
-                'username',
-                'demo123',
-                'user123',
-            ]
-            if (TAKEN_USERNAMES.includes(username.toLowerCase())) {
-                methods.setError('username', {
-                    type: 'manual',
-                    message: `Username "${username}" is already taken`,
-                })
-                return
-            }
-
-            const password = methods.getValues('password')
-            const passwordRegex =
-                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
-            if (!passwordRegex.test(password)) {
-                methods.setError('password', {
-                    type: 'manual',
-                    message:
-                        'Password must include uppercase, lowercase, number, and special character',
-                })
-                return
-            }
-
-            const confirmPassword = methods.getValues('confirmPassword')
-            if (password !== confirmPassword) {
-                methods.setError('confirmPassword', {
-                    type: 'manual',
-                    message: 'Passwords do not match',
-                })
-                return
-            }
-
-            const acceptTerms = methods.getValues('acceptTerms')
-            if (!acceptTerms) {
-                methods.setError('acceptTerms', {
-                    type: 'manual',
-                    message: 'You must accept the terms and conditions',
-                })
-                return
-            }
-        }
-
-        const isValid = await saveFormData()
-
-        if (isValid) {
-            setErrors({})
-            nextStep()
-        } else {
-            // Collect validation errors
+        if (!isValid) {
             const formErrors = methods.formState.errors
             const errorMessages: Record<string, string> = {}
 
@@ -175,7 +95,12 @@ const MultiStepForm: React.FC = () => {
             })
 
             setErrors(errorMessages)
+            return
         }
+
+        await saveFormData()
+        setErrors({})
+        nextStep()
     }
 
     const handlePrev = async () => {
@@ -196,10 +121,11 @@ const MultiStepForm: React.FC = () => {
 
     const handleSubmit = async () => {
         setIsLoading(true)
+
         try {
             const formValues = methods.getValues()
-
             const isValid = await methods.trigger()
+
             if (!isValid) {
                 alert('Please fix validation errors before submitting.')
                 return
@@ -210,9 +136,14 @@ const MultiStepForm: React.FC = () => {
             // Simulate API call
             await new Promise((resolve) => setTimeout(resolve, 1500))
 
-            // Show success message
-            alert('Registration submitted successfully! (Backend integration pending)')
+            // TODO: Replace with actual API call
+            // const response = await fetch('/api/register', {
+            //   method: 'POST',
+            //   headers: { 'Content-Type': 'application/json' },
+            //   body: JSON.stringify(formValues)
+            // })
 
+            alert('Registration submitted successfully!')
             clearForm()
             methods.reset(defaultFormData)
             setCurrentStep(1)
@@ -239,22 +170,6 @@ const MultiStepForm: React.FC = () => {
             default:
                 return null
         }
-    }
-
-    const defaultFormData = {
-        firstName: '',
-        lastName: '',
-        email: '',
-        phoneNumber: '',
-        streetAddress: '',
-        city: '',
-        state: '',
-        country: '',
-        username: '',
-        password: '',
-        confirmPassword: '',
-        acceptTerms: false,
-        newsletter: false,
     }
 
     return (

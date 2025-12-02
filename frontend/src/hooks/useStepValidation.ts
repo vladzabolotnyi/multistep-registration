@@ -1,51 +1,52 @@
-import { useEffect } from 'react'
-import { useFormContext } from 'react-hook-form'
-import { useFormContext as useCustomFormContext } from '../contexts/FormContext'
-import {
-    personalInfoSchema,
-    addressSchema,
-    accountSchema,
-} from '../lib/validation/schemas'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { useCallback } from 'react'
+import { type UseFormReturn } from 'react-hook-form'
+import { useEmailDomainValidation } from './useEmailDomainValidation'
+import { useUsernameValidation } from './useUsernameValidation'
 
-export const useStepValidation = (step: number) => {
-    const { setErrors } = useCustomFormContext()
-    const {
-        formState: { errors },
-    } = useFormContext()
+interface StepValidationProps {
+    currentStep: number
+    methods: UseFormReturn<any>
+}
 
-    // Get the appropriate schema for the current step
-    const getStepSchema = () => {
-        switch (step) {
-            case 1:
-                return personalInfoSchema
-            case 2:
-                return addressSchema
-            case 3:
-                return accountSchema
-            default:
-                return null
+export const useStepValidation = ({ currentStep, methods }: StepValidationProps) => {
+    const { checkUsername } = useUsernameValidation()
+
+    const validateStep = useCallback(async (): Promise<boolean> => {
+        // First, trigger react-hook-form validation (Zod schema)
+        const isValid = await methods.trigger()
+
+        if (!isValid) {
+            return false
         }
-    }
 
-    // Update global errors when form errors change
-    useEffect(() => {
-        const errorMessages: Record<string, string> = {}
+        // Step 2: Email domain validation
+        if (currentStep === 2) {
+            const email = methods.getValues('email')
+            const country = methods.getValues('country')
 
-        Object.keys(errors).forEach((key) => {
-            if (errors[key]?.message) {
-                errorMessages[key] = errors[key]!.message as string
+            // This validation is now handled by the hook
+            // and displayed in the UI, but we can add additional check here
+            // The hook useEmailDomainValidation should be used in Step2Address component
+        }
+
+        // Step 3: Username availability check
+        if (currentStep === 3) {
+            const username = methods.getValues('username')
+
+            // Username validation is already in schema, but we need async check
+            const isUsernameAvailable = await checkUsername(username)
+
+            if (!isUsernameAvailable) {
+                methods.setError('username', {
+                    type: 'manual',
+                    message: `Username "${username}" is already taken`,
+                })
+                return false
             }
-        })
+        }
 
-        setErrors(errorMessages)
-    }, [errors, setErrors])
+        return true
+    }, [currentStep, methods, checkUsername])
 
-    // Get resolver for current step
-    const resolver = getStepSchema() ? zodResolver(getStepSchema()!) : undefined
-
-    return {
-        resolver,
-        schema: getStepSchema(),
-    }
+    return { validateStep }
 }

@@ -2,15 +2,27 @@ import React, { useState, useEffect } from 'react'
 import { useFormContext } from 'react-hook-form'
 import Input from '../common/Input'
 import Checkbox from '../common/Checkbox'
-import Alert from '../common/Alert'
-import { FaUser, FaLock, FaFileContract, FaShieldAlt, FaEye } from 'react-icons/fa'
+import {
+    FaUser,
+    FaLock,
+    FaFileContract,
+    FaShieldAlt,
+    FaEye,
+    FaEyeSlash,
+    FaSpinner,
+    FaCheckCircle,
+    FaTimesCircle,
+} from 'react-icons/fa'
 import { checkPasswordStrength } from '../../lib/validation/schemas'
+import { useUsernameValidation } from '../../hooks/useUsernameValidation'
 
 const Step3Account: React.FC = () => {
     const {
         register,
         formState: { errors, dirtyFields },
         watch,
+        setError,
+        clearErrors,
     } = useFormContext()
 
     const username = watch('username')
@@ -19,7 +31,6 @@ const Step3Account: React.FC = () => {
 
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-    const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null)
     const [passwordChecks, setPasswordChecks] = useState({
         length: false,
         uppercase: false,
@@ -27,6 +38,35 @@ const Step3Account: React.FC = () => {
         number: false,
         special: false,
     })
+
+    const {
+        checkUsername,
+        isChecking,
+        isAvailable,
+        reset: resetUsernameCheck,
+    } = useUsernameValidation()
+
+    useEffect(() => {
+        if (!username || username.length < 6) {
+            resetUsernameCheck()
+            return
+        }
+
+        const timeoutId = setTimeout(async () => {
+            const available = await checkUsername(username)
+
+            if (!available) {
+                setError('username', {
+                    type: 'manual',
+                    message: `Username "${username}" is already taken`,
+                })
+            } else {
+                clearErrors('username')
+            }
+        }, 1000)
+
+        return () => clearTimeout(timeoutId)
+    }, [username, checkUsername, setError, clearErrors, resetUsernameCheck])
 
     useEffect(() => {
         if (password) {
@@ -49,26 +89,20 @@ const Step3Account: React.FC = () => {
         return 'default'
     }
 
-    // Handle username availability change
-    const handleUsernameAvailabilityChange = (available: boolean) => {
-        setUsernameAvailable(available)
-
-        // If username is taken, set error
-        if (!available && username) {
-            // Error is already shown by UsernameAvailabilityChecker
-        }
-    }
-
-    // Handle password visibility toggle
-    const togglePasswordVisibility = () => {
-        setShowPassword(!showPassword)
-    }
-
-    const toggleConfirmPasswordVisibility = () => {
-        setShowConfirmPassword(!showConfirmPassword)
-    }
-
     const isPasswordStrong = Object.values(passwordChecks).every(Boolean)
+
+    const getUsernameRightIcon = () => {
+        if (isChecking) {
+            return <FaSpinner className="text-gray-400 animate-spin" />
+        }
+        if (isAvailable === true && username && username.length >= 6) {
+            return <FaCheckCircle className="text-green-500" />
+        }
+        if (isAvailable === false) {
+            return <FaTimesCircle className="text-red-500" />
+        }
+        return null
+    }
 
     return (
         <div className="space-y-6">
@@ -79,26 +113,25 @@ const Step3Account: React.FC = () => {
                 </p>
             </div>
 
-            {/* Username */}
-            <div className="space-y-4">
+            <div className="space-y-2">
                 <Input
                     label="Username"
                     type="text"
                     placeholder="Choose a username"
                     error={errors.username?.message as string}
                     {...register('username')}
-                    helperText="This will be your public display name"
+                    helperText="Minimum 6 characters, letters, numbers, and underscores only"
                     required
                     leftIcon={<FaUser />}
+                    rightIcon={getUsernameRightIcon()}
                     showSuccess={
                         getFieldStatus('username', username) === 'success' &&
-                        usernameAvailable === true
+                        isAvailable === true
                     }
                 />
             </div>
 
-            {/* Password */}
-            <div className="space-y-4">
+            <div className="space-y-2">
                 <Input
                     label="Password"
                     type={showPassword ? 'text' : 'password'}
@@ -107,17 +140,75 @@ const Step3Account: React.FC = () => {
                     {...register('password')}
                     required
                     leftIcon={<FaLock />}
+                    rightIcon={
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                        >
+                            {showPassword ? <FaEyeSlash /> : <FaEye />}
+                        </button>
+                    }
                     showSuccess={isPasswordStrong}
                 />
 
-                {/* Password Strength Indicator */}
-                {/* <div className="p-4 bg-gray-50 rounded-lg border border-gray-200"> */}
-                {/*     <PasswordStrengthIndicator */}
-                {/*         password={password || ''} */}
-                {/*         showPassword={showPassword} */}
-                {/*         onToggleShowPassword={togglePasswordVisibility} */}
-                {/*     /> */}
-                {/* </div> */}
+                {password && (
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                        <p className="mb-2 text-sm font-medium text-gray-700">
+                            Password Requirements:
+                        </p>
+                        <ul className="space-y-1 text-sm">
+                            <li
+                                className={
+                                    passwordChecks.length
+                                        ? 'text-green-600'
+                                        : 'text-gray-500'
+                                }
+                            >
+                                {passwordChecks.length ? '✓' : '○'} At least 8 characters
+                            </li>
+                            <li
+                                className={
+                                    passwordChecks.uppercase
+                                        ? 'text-green-600'
+                                        : 'text-gray-500'
+                                }
+                            >
+                                {passwordChecks.uppercase ? '✓' : '○'} One uppercase
+                                letter
+                            </li>
+                            <li
+                                className={
+                                    passwordChecks.lowercase
+                                        ? 'text-green-600'
+                                        : 'text-gray-500'
+                                }
+                            >
+                                {passwordChecks.lowercase ? '✓' : '○'} One lowercase
+                                letter
+                            </li>
+                            <li
+                                className={
+                                    passwordChecks.number
+                                        ? 'text-green-600'
+                                        : 'text-gray-500'
+                                }
+                            >
+                                {passwordChecks.number ? '✓' : '○'} One number
+                            </li>
+                            <li
+                                className={
+                                    passwordChecks.special
+                                        ? 'text-green-600'
+                                        : 'text-gray-500'
+                                }
+                            >
+                                {passwordChecks.special ? '✓' : '○'} One special character
+                                (@$!%*?&)
+                            </li>
+                        </ul>
+                    </div>
+                )}
             </div>
 
             <Input
@@ -128,18 +219,18 @@ const Step3Account: React.FC = () => {
                 {...register('confirmPassword')}
                 required
                 leftIcon={<FaShieldAlt />}
-                showSuccess={
-                    getFieldStatus('confirmPassword', confirmPassword) === 'success' &&
-                    password === confirmPassword
-                }
                 rightIcon={
                     <button
                         type="button"
-                        onClick={toggleConfirmPasswordVisibility}
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         className="text-gray-400 hover:text-gray-600 focus:outline-none"
                     >
-                        {showConfirmPassword ? <FaEye /> : <FaEye />}
+                        {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
                     </button>
+                }
+                showSuccess={
+                    getFieldStatus('confirmPassword', confirmPassword) === 'success' &&
+                    password === confirmPassword
                 }
             />
 
@@ -150,7 +241,6 @@ const Step3Account: React.FC = () => {
                     {...register('acceptTerms')}
                     required
                 />
-
                 <div className="p-3 mt-3 bg-blue-50 rounded-lg">
                     <div className="flex items-start">
                         <FaFileContract className="mt-0.5 mr-3 w-5 h-5 text-blue-500 shrink-0" />
@@ -186,7 +276,6 @@ const Step3Account: React.FC = () => {
                 </div>
             </div>
 
-            {/* Newsletter Subscription */}
             <div className="p-4 rounded-lg border border-gray-200">
                 <Checkbox
                     label="Subscribe to our newsletter"
@@ -194,15 +283,6 @@ const Step3Account: React.FC = () => {
                     helperText="Get updates about new features, tips, and special offers"
                 />
             </div>
-
-            {/* Warning for taken usernames */}
-            {usernameAvailable === false && (
-                <Alert
-                    type="warning"
-                    title="Username Already Taken"
-                    message={`The username "${username}" is not available. Please choose a different username or try one of our suggestions above.`}
-                />
-            )}
         </div>
     )
 }
