@@ -83,7 +83,7 @@ const Step3Account: React.FC = () => {
         }
     }, [password])
 
-    const getFieldStatus = (fieldName: string, value: any) => {
+    const getFieldStatus = (fieldName: string, value: string) => {
         if (errors[fieldName]) return 'error'
         if (dirtyFields[fieldName] && value && !errors[fieldName]) return 'success'
         return 'default'

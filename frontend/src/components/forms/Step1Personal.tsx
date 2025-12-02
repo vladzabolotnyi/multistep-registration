@@ -3,9 +3,6 @@ import { useFormContext } from 'react-hook-form'
 import Input from '../common/Input'
 import { FaUser, FaEnvelope, FaPhone } from 'react-icons/fa'
 
-// TODO: Handle getFieldStatus in generic way to reuse in all steps
-type FieldStatus = 'default' | 'error' | 'success'
-
 const Step1Personal: React.FC = () => {
     const {
         register,
@@ -18,7 +15,7 @@ const Step1Personal: React.FC = () => {
     const email = watch('email')
     const phoneNumber = watch('phoneNumber')
 
-    const getFieldStatus = (fieldName: string, value: string): FieldStatus => {
+    const getFieldStatus = (fieldName: string, value: string) => {
         if (errors[fieldName]) return 'error'
         if (dirtyFields[fieldName] && value && !errors[fieldName]) return 'success'
         return 'default'
