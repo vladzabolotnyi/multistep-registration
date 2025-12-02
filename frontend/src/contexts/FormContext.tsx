@@ -6,6 +6,7 @@ interface FormContextType {
     currentStep: FormStep
     errors: Record<string, string>
     isLoading: boolean
+    updateFormData: (data: Partial<FormData>) => void
     setCurrentStep: (step: FormStep) => void
     setErrors: (errors: Record<string, string>) => void
     setIsLoading: (loading: boolean) => void
@@ -33,27 +34,20 @@ const defaultFormData: FormData = {
 const FormContext = createContext<FormContextType | undefined>(undefined)
 
 export const FormProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [formData, setFormData] = useState<FormData>(() => {
-        const saved = localStorage.getItem('registration-form')
-        return saved ? JSON.parse(saved) : defaultFormData
-    })
-
+    const [formData, setFormData] = useState<FormData>(defaultFormData)
     const [currentStep, setCurrentStep] = useState<FormStep>(1)
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [isLoading, setIsLoading] = useState(false)
 
-    // Only update formData when moving between steps or on submit
-    const updateFormDataForReview = useCallback((data: Partial<FormData>) => {
-        setFormData((prev) => {
-            const updated = { ...prev, ...data }
-            localStorage.setItem('registration-form', JSON.stringify(updated))
-            return updated
-        })
+    const updateFormData = useCallback((data: Partial<FormData>) => {
+        setFormData((prev) => ({
+            ...prev,
+            ...data,
+        }))
     }, [])
 
     const clearForm = useCallback(() => {
         setFormData(defaultFormData)
-        localStorage.removeItem('registration-form')
         setCurrentStep(1)
         setErrors({})
     }, [])
@@ -61,12 +55,14 @@ export const FormProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const nextStep = useCallback(() => {
         if (currentStep < 4) {
             setCurrentStep((prev) => (prev + 1) as FormStep)
+            setErrors({})
         }
     }, [currentStep])
 
     const prevStep = useCallback(() => {
         if (currentStep > 1) {
             setCurrentStep((prev) => (prev - 1) as FormStep)
+            setErrors({})
         }
     }, [currentStep])
 
@@ -77,6 +73,7 @@ export const FormProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 currentStep,
                 errors,
                 isLoading,
+                updateFormData,
                 setCurrentStep,
                 setErrors,
                 setIsLoading,

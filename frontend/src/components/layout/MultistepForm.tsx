@@ -42,6 +42,7 @@ const MultiStepForm: React.FC = () => {
         clearForm,
         nextStep,
         prevStep,
+        updateFormData,
     } = useFormContext()
 
     const methods = useForm({
@@ -73,6 +74,8 @@ const MultiStepForm: React.FC = () => {
         if (isValid) {
             // TODO:  Store in memory instead of localStorage
             // This will be handled by FormContext
+            updateFormData(formValues)
+
             return true
         }
 
