@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { useFormContext } from 'react-hook-form'
 import Input from '../common/Input'
 import Select from '../common/Select'
@@ -20,6 +20,7 @@ const Step2Address: React.FC = () => {
         formState: { errors, dirtyFields },
         watch,
         setValue,
+        getValues,
     } = useFormContext()
 
     const streetAddress = watch('streetAddress')
@@ -45,11 +46,28 @@ const Step2Address: React.FC = () => {
     const [emailDomainError, setEmailDomainError] = useState<string>('')
     const [isRefreshing, setIsRefreshing] = useState(false)
 
+    const countryOptions = useMemo(() => {
+        return countries.map((country) => ({
+            value: country.code,
+            label: `${country.name} ${country.flag || ''}`.trim(),
+        }))
+    }, [countries])
+
+    const stateOptions = useMemo(() => {
+        return states.map((state) => ({
+            value: state.name,
+            label: state.name,
+        }))
+    }, [states])
+
+    const selectedCountry = useMemo(() => {
+        return countries.find((c) => c.code === countryCode) || null
+    }, [countries, countryCode])
+
     useEffect(() => {
         if (countryCode) {
             loadStates(countryCode)
 
-            const selectedCountry = countries.find((c) => c.code === countryCode)
             if (selectedCountry?.tlds?.length && email) {
                 const isValidDomain = selectedCountry.tlds.some((tld) =>
                     email.toLowerCase().endsWith(tld.toLowerCase()),
@@ -62,21 +80,36 @@ const Step2Address: React.FC = () => {
                 } else {
                     setEmailDomainError('')
                 }
+            } else {
+                setEmailDomainError('')
             }
-
-            setValue('state', '')
-        } else {
-            setEmailDomainError('')
         }
-    }, [countryCode, email, countries, loadStates, setValue])
+    }, [countryCode, email, selectedCountry, loadStates])
+
+    useEffect(() => {
+        if (countryCode && !isLoading && countries.length > 0) {
+            const countryExists = countries.some((c) => c.code === countryCode)
+
+            if (!countryExists) {
+                console.warn(
+                    `Selected country ${countryCode} not found in loaded countries`,
+                )
+                setValue('country', '')
+            }
+        }
+    }, [countryCode, countries, isLoading, setValue])
 
     const handleCountryChange = useCallback(
         (e: React.ChangeEvent<HTMLSelectElement>) => {
             const newCountryCode = e.target.value
             setValue('country', newCountryCode)
-            setValue('state', '')
+
+            const currentCountry = getValues('country')
+            if (currentCountry !== newCountryCode) {
+                setValue('state', '')
+            }
         },
-        [setValue],
+        [setValue, getValues],
     )
 
     const handleRefresh = async () => {
@@ -94,15 +127,25 @@ const Step2Address: React.FC = () => {
         return 'default'
     }
 
-    const countryOptions = countries.map((country) => ({
-        value: country.code,
-        label: `${country.name} ${country.flag || ''}`.trim(),
-    }))
+    const getCountryPlaceholder = () => {
+        if (isLoading) return 'Loading countries...'
+        if (countries.length === 0) return 'No countries available'
+        return 'Select your country'
+    }
 
-    const stateOptions = states.map((state) => ({
-        value: state.code,
-        label: state.name,
-    }))
+    const getStatePlaceholder = () => {
+        if (isLoading) return 'Loading...'
+        if (!countryCode) return 'Select country first'
+        if (states.length === 0) return 'No states available'
+        return 'Select your state/province'
+    }
+
+    const getStateHelperText = () => {
+        if (isLoading) return 'Loading states...'
+        if (!countryCode) return 'Please select a country first'
+        if (states.length === 0) return 'No states/provinces for this country'
+        return ''
+    }
 
     return (
         <div className="space-y-6">
@@ -156,9 +199,7 @@ const Step2Address: React.FC = () => {
                     <Select
                         label="Country"
                         options={countryOptions}
-                        placeholder={
-                            isLoading ? 'Loading countries...' : 'Select your country'
-                        }
+                        placeholder={getCountryPlaceholder()}
                         error={errors.country?.message as string}
                         {...register('country')}
                         onChange={handleCountryChange}
@@ -166,6 +207,7 @@ const Step2Address: React.FC = () => {
                         leftIcon={<FaGlobeAmericas />}
                         showSuccess={getFieldStatus('country', countryCode) === 'success'}
                         disabled={isLoading}
+                        value={countryCode}
                     />
 
                     <div className="absolute right-0 top-8">
@@ -188,30 +230,15 @@ const Step2Address: React.FC = () => {
                 <Select
                     label="State/Province"
                     options={stateOptions}
-                    placeholder={
-                        isLoading
-                            ? 'Loading...'
-                            : !countryCode
-                              ? 'Select country first'
-                              : states.length === 0
-                                ? 'No states available'
-                                : 'Select your state/province'
-                    }
+                    placeholder={getStatePlaceholder()}
                     error={errors.state?.message as string}
                     {...register('state')}
-                    helperText={
-                        isLoading
-                            ? 'Loading states...'
-                            : !countryCode
-                              ? 'Please select a country first'
-                              : states.length === 0
-                                ? 'No states/provinces for this country'
-                                : ''
-                    }
+                    helperText={getStateHelperText()}
                     required={states.length > 0}
                     leftIcon={<FaFlag />}
                     showSuccess={getFieldStatus('state', stateValue) === 'success'}
                     disabled={!countryCode || isLoading || states.length === 0}
+                    value={stateValue}
                 />
             </div>
 
