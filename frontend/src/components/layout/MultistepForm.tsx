@@ -143,7 +143,6 @@ const MultiStepForm: React.FC = () => {
     return (
         <FormProvider {...methods}>
             <div className="space-y-8">
-                {/* Progress Bar */}
                 <div className="px-4">
                     <ProgressBar
                         steps={STEPS}
