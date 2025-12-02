@@ -38,6 +38,8 @@ const defaultFormData: FormData = {
 
 const FormContext = createContext<FormContextType | undefined>(undefined)
 
+// TODO: Current implementation is using local storage to store form data but I'd like to store data in memory because
+// the form has data like password..
 export const FormProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [formData, setFormData] = useState<FormData>(() => {
         // Try to load from localStorage on initial render
