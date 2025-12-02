@@ -11,6 +11,12 @@ const phoneSchema = z
         message: 'Please enter a valid phone number (e.g., 123-456-7890)',
     })
 
+export const getCountryTldsMessage = (countryCode: string): string => {
+    const country = COUNTRIES.find((c) => c.code === countryCode)
+    if (!country || !country.tlds?.length) return ''
+    return `Expected domains: ${country.tlds.join(', ')}`
+}
+
 // Step 1 Schema - Personal Information
 export const personalInfoSchema = z.object({
     firstName: z
@@ -52,15 +58,40 @@ export const addressSchema = z.object({
         .min(1, 'City is required')
         .max(100, 'City cannot exceed 100 characters')
         .regex(
-            /^[A-Za-z\s'-]+$/,
-            'City can only contain letters, spaces, hyphens, and apostrophes',
+            /^[A-Za-z\s'-.,]+$/,
+            'City can only contain letters, spaces, hyphens, apostrophes, commas, and periods',
         ),
 
     state: z.string().min(1, 'State/Province is required'),
     country: z.string().min(1, 'Country is required'),
 })
 
-// Step 3 Schema - Account Setup
+export const addressSchemaWithEmailValidation = (email: string, country: string) =>
+    addressSchema.refine(
+        (data) => {
+            if (!data.country) return true
+
+            const countryData = COUNTRIES.find((c) => c.code === data.country)
+            if (!countryData || !countryData.tlds?.length) return true
+
+            // If country changes, validate email against new country
+            const emailDomain = email.substring(email.lastIndexOf('.'))
+            const isValidDomain = countryData.tlds.some((tld) =>
+                email.toLowerCase().endsWith(tld.toLowerCase()),
+            )
+
+            return isValidDomain
+        },
+        {
+            message: (data) => {
+                const countryData = COUNTRIES.find((c) => c.code === data.country)
+                if (!countryData) return 'Invalid country selected'
+                return `Email domain should match selected country (${countryData.name}). Expected domains: ${countryData.tlds?.join(', ') || 'any'}`
+            },
+            path: ['email'],
+        },
+    )
+
 export const accountSchema = z
     .object({
         username: z
@@ -94,12 +125,12 @@ export const accountSchema = z
         path: ['confirmPassword'],
     })
 
-// TODO: Update the logic for combinedSchema
 export const combinedSchema = personalInfoSchema
     .merge(addressSchema)
     .merge(accountSchema)
     .refine(
         (data) => {
+            // Email domain validation (Bonus feature)
             if (!data.country) return true
 
             const country = COUNTRIES.find((c) => c.code === data.country)
@@ -113,8 +144,11 @@ export const combinedSchema = personalInfoSchema
             return isValidDomain
         },
         {
-            message:
-                'Email domain should match selected country. Expected domains: .us, .com, .net, .org for US',
+            message: (data) => {
+                const country = COUNTRIES.find((c) => c.code === data.country)
+                if (!country) return 'Invalid country selected'
+                return `Email domain should match selected country (${country.name}). Expected domains: ${country.tlds?.join(', ') || 'any'}`
+            },
             path: ['email'],
         },
     )

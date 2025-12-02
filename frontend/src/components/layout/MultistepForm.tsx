@@ -9,7 +9,7 @@ import Step2Address from '../forms/Step2Address'
 import Step3Account from '../forms/Step3Account'
 import ReviewStep from '../forms/ReviewStep'
 import { useFormContext } from '../../contexts/FormContext'
-import { STEPS } from '../../utils/constants'
+import { COUNTRIES, STEPS } from '../../utils/constants'
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa'
 import {
     personalInfoSchema,
@@ -68,12 +68,45 @@ const MultiStepForm: React.FC = () => {
     const handleNext = async () => {
         if (currentStep === 4) return
 
+        // For Step 2, we need to validate email domain against country
+        if (currentStep === 2) {
+            const email = methods.getValues('email')
+            const country = methods.getValues('country')
+
+            if (email && country) {
+                const selectedCountry = COUNTRIES.find((c) => c.code === country)
+                if (selectedCountry?.tlds?.length) {
+                    const emailDomain = email.substring(email.lastIndexOf('.'))
+                    const isValidDomain = selectedCountry.tlds.some((tld) =>
+                        email.toLowerCase().endsWith(tld.toLowerCase()),
+                    )
+
+                    if (!isValidDomain) {
+                        const errorMsg = `Email domain should end with ${selectedCountry.tlds.join(' or ')} for ${selectedCountry.name}`
+                        methods.setError('email', {
+                            type: 'manual',
+                            message: errorMsg,
+                        })
+
+                        // Show error in context as well
+                        setErrors({
+                            email: errorMsg,
+                            ...methods.formState.errors,
+                        })
+
+                        return
+                    }
+                }
+            }
+        }
+
         const isValid = await saveFormData()
 
         if (isValid) {
             setErrors({})
             nextStep()
         } else {
+            // Collect validation errors
             const formErrors = methods.formState.errors
             const errorMessages: Record<string, string> = {}
 
