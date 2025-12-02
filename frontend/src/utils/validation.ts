@@ -17,7 +17,7 @@ export const validateEmailDomain = (
 }
 
 export const validatePhoneNumber = (phone: string): boolean => {
-    if (!phone) return true // Optional field
+    if (!phone) return true
     const phoneRegex = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/
     return phoneRegex.test(phone)
 }

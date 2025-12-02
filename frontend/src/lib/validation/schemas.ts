@@ -71,9 +71,8 @@ export const personalInfoSchema = z.object({
         ),
 
     email: z
-        .string()
-        .min(1, 'Email is required')
         .email('Please enter a valid email address (e.g., example@domain.com)')
+        .min(1, 'Email is required')
         .max(100, 'Email cannot exceed 100 characters'),
 
     phoneNumber: phoneSchema,
