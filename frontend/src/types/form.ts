@@ -23,6 +23,7 @@ export type Country = {
     code: string
     name: string
     tlds: string[]
+    flag: string
 }
 
 export type State = {
