@@ -268,15 +268,6 @@ const MultiStepForm: React.FC = () => {
                     />
                 </div>
 
-                <div className="pb-4 border-b border-gray-200">
-                    <h2 className="text-xl font-semibold text-gray-800">
-                        {STEPS.find((s) => s.number === currentStep)?.title}
-                    </h2>
-                    <p className="mt-1 text-sm text-gray-600">
-                        Step {currentStep} of {STEPS.length}
-                    </p>
-                </div>
-
                 {Object.keys(errors).length > 0 && currentStep !== 4 && (
                     <Alert
                         type="error"
