@@ -12,7 +12,7 @@ import { useFormContext } from '../../contexts/FormContext'
 import { STEPS } from '../../utils/constants'
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa'
 import { useStepValidation } from '../../hooks/useStepValidation'
-import { getStepSchema } from '../../lib/validation/schemas'
+import { type FullFormData, getStepSchema } from '../../lib/validation/schemas'
 import { createDefaultFormData } from '../../utils/form'
 
 const MultiStepForm: React.FC = () => {
@@ -30,7 +30,7 @@ const MultiStepForm: React.FC = () => {
         updateFormData,
     } = useFormContext()
 
-    const methods = useForm({
+    const methods = useForm<FullFormData>({
         defaultValues: formData,
         mode: 'onChange',
         resolver: zodResolver(getStepSchema(currentStep)),
@@ -57,8 +57,6 @@ const MultiStepForm: React.FC = () => {
         const isValid = await methods.trigger()
 
         if (isValid) {
-            // TODO:  Store in memory instead of localStorage
-            // This will be handled by FormContext
             updateFormData(formValues)
 
             return true
