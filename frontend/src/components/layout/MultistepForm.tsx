@@ -68,7 +68,7 @@ const MultiStepForm: React.FC = () => {
     const handleNext = async () => {
         if (currentStep === 4) return
 
-        // For Step 2, we need to validate email domain against country
+        // For Step 2: Email domain validation
         if (currentStep === 2) {
             const email = methods.getValues('email')
             const country = methods.getValues('country')
@@ -76,7 +76,6 @@ const MultiStepForm: React.FC = () => {
             if (email && country) {
                 const selectedCountry = COUNTRIES.find((c) => c.code === country)
                 if (selectedCountry?.tlds?.length) {
-                    const emailDomain = email.substring(email.lastIndexOf('.'))
                     const isValidDomain = selectedCountry.tlds.some((tld) =>
                         email.toLowerCase().endsWith(tld.toLowerCase()),
                     )
@@ -88,7 +87,6 @@ const MultiStepForm: React.FC = () => {
                             message: errorMsg,
                         })
 
-                        // Show error in context as well
                         setErrors({
                             email: errorMsg,
                             ...methods.formState.errors,
@@ -97,6 +95,65 @@ const MultiStepForm: React.FC = () => {
                         return
                     }
                 }
+            }
+        }
+
+        if (currentStep === 3) {
+            const username = methods.getValues('username')
+
+            if (username.length < 6) {
+                methods.setError('username', {
+                    type: 'manual',
+                    message: 'Username must be at least 6 characters',
+                })
+                return
+            }
+
+            // TODO: Update this logic. Now its mocked
+            const TAKEN_USERNAMES = [
+                'john_doe',
+                'admin',
+                'testuser',
+                'username',
+                'demo123',
+                'user123',
+            ]
+            if (TAKEN_USERNAMES.includes(username.toLowerCase())) {
+                methods.setError('username', {
+                    type: 'manual',
+                    message: `Username "${username}" is already taken`,
+                })
+                return
+            }
+
+            const password = methods.getValues('password')
+            const passwordRegex =
+                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+            if (!passwordRegex.test(password)) {
+                methods.setError('password', {
+                    type: 'manual',
+                    message:
+                        'Password must include uppercase, lowercase, number, and special character',
+                })
+                return
+            }
+
+            const confirmPassword = methods.getValues('confirmPassword')
+            if (password !== confirmPassword) {
+                methods.setError('confirmPassword', {
+                    type: 'manual',
+                    message: 'Passwords do not match',
+                })
+                return
+            }
+
+            const acceptTerms = methods.getValues('acceptTerms')
+            if (!acceptTerms) {
+                methods.setError('acceptTerms', {
+                    type: 'manual',
+                    message: 'You must accept the terms and conditions',
+                })
+                return
             }
         }
 

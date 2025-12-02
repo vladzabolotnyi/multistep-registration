@@ -2,6 +2,39 @@ import { z } from 'zod'
 import { passwordRegex, validatePhoneNumber } from '../../utils/validation'
 import { COUNTRIES } from '../../utils/constants'
 
+export const checkPasswordStrength = (password: string) => {
+    const checks = {
+        length: password.length >= 8,
+        uppercase: /[A-Z]/.test(password),
+        lowercase: /[a-z]/.test(password),
+        number: /\d/.test(password),
+        special: /[@$!%*?&]/.test(password),
+    }
+
+    const passed = Object.values(checks).filter(Boolean).length
+    const total = Object.keys(checks).length
+    const strength = (passed / total) * 100
+
+    return { checks, strength, passed, total }
+}
+
+export const getPasswordStrengthMessage = (password: string): string => {
+    const { checks } = checkPasswordStrength(password)
+
+    if (!password) return 'Enter a password'
+
+    const missing = []
+    if (!checks.length) missing.push('at least 8 characters')
+    if (!checks.uppercase) missing.push('one uppercase letter')
+    if (!checks.lowercase) missing.push('one lowercase letter')
+    if (!checks.number) missing.push('one number')
+    if (!checks.special) missing.push('one special character (@$!%*?&)')
+
+    if (missing.length === 0) return 'Strong password ✓'
+    if (missing.length === 1) return `Add ${missing[0]}`
+    return `Missing: ${missing.slice(0, 2).join(', ')}${missing.length > 2 ? '...' : ''}`
+}
+
 // Helper function for phone validation
 const phoneSchema = z
     .string()
