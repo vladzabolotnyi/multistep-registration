@@ -17,24 +17,6 @@ export const checkPasswordStrength = (password: string) => {
     return { checks, strength, passed, total }
 }
 
-export const getPasswordStrengthMessage = (password: string): string => {
-    const { checks } = checkPasswordStrength(password)
-
-    if (!password) return 'Enter a password'
-
-    const missing = []
-    if (!checks.length) missing.push('at least 8 characters')
-    if (!checks.uppercase) missing.push('one uppercase letter')
-    if (!checks.lowercase) missing.push('one lowercase letter')
-    if (!checks.number) missing.push('one number')
-    if (!checks.special) missing.push('one special character (@$!%*?&)')
-
-    if (missing.length === 0) return 'Strong password ✓'
-    if (missing.length === 1) return `Add ${missing[0]}`
-    return `Missing: ${missing.slice(0, 2).join(', ')}${missing.length > 2 ? '...' : ''}`
-}
-
-// Helper function for phone validation
 const phoneSchema = z
     .string()
     .optional()
@@ -43,7 +25,6 @@ const phoneSchema = z
         message: 'Please enter a valid phone number (e.g., 123-456-7890)',
     })
 
-// Step 1 Schema - Personal Information
 export const personalInfoSchema = z.object({
     firstName: z
         .string()
@@ -71,7 +52,6 @@ export const personalInfoSchema = z.object({
     phoneNumber: phoneSchema,
 })
 
-// Step 2 Schema - Address Details
 export const addressSchema = z.object({
     streetAddress: z
         .string()
@@ -90,32 +70,6 @@ export const addressSchema = z.object({
     state: z.string().min(1, 'State/Province is required'),
     country: z.string().min(1, 'Country is required'),
 })
-
-export const addressSchemaWithEmailValidation = (email: string, country: string) =>
-    addressSchema.refine(
-        (data) => {
-            if (!data.country) return true
-
-            const countryData = COUNTRIES.find((c) => c.code === data.country)
-            if (!countryData || !countryData.tlds?.length) return true
-
-            // If country changes, validate email against new country
-            const emailDomain = email.substring(email.lastIndexOf('.'))
-            const isValidDomain = countryData.tlds.some((tld) =>
-                email.toLowerCase().endsWith(tld.toLowerCase()),
-            )
-
-            return isValidDomain
-        },
-        {
-            message: (data) => {
-                const countryData = COUNTRIES.find((c) => c.code === data.country)
-                if (!countryData) return 'Invalid country selected'
-                return `Email domain should match selected country (${countryData.name}). Expected domains: ${countryData.tlds?.join(', ') || 'any'}`
-            },
-            path: ['email'],
-        },
-    )
 
 export const accountSchema = z
     .object({
@@ -150,33 +104,7 @@ export const accountSchema = z
         path: ['confirmPassword'],
     })
 
-export const combinedSchema = personalInfoSchema
-    .merge(addressSchema)
-    .merge(accountSchema)
-    .refine(
-        (data) => {
-            // Email domain validation (Bonus feature)
-            if (!data.country) return true
-
-            const country = COUNTRIES.find((c) => c.code === data.country)
-            if (!country || !country.tlds?.length) return true
-
-            const emailDomain = data.email.substring(data.email.lastIndexOf('.'))
-            const isValidDomain = country.tlds.some((tld) =>
-                data.email.toLowerCase().endsWith(tld.toLowerCase()),
-            )
-
-            return isValidDomain
-        },
-        {
-            message: (data) => {
-                const country = COUNTRIES.find((c) => c.code === data.country)
-                if (!country) return 'Invalid country selected'
-                return `Email domain should match selected country (${country.name}). Expected domains: ${country.tlds?.join(', ') || 'any'}`
-            },
-            path: ['email'],
-        },
-    )
+export const combinedSchema = personalInfoSchema.merge(addressSchema).merge(accountSchema)
 
 export type PersonalInfoFormData = z.infer<typeof personalInfoSchema>
 export type AddressFormData = z.infer<typeof addressSchema>
