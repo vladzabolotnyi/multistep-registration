@@ -1,6 +1,5 @@
 import { z } from 'zod'
 import { passwordRegex, validatePhoneNumber } from '../../utils/validation'
-import { COUNTRIES } from '../../utils/constants'
 
 export const checkPasswordStrength = (password: string) => {
     const checks = {
@@ -43,12 +42,6 @@ const phoneSchema = z
     .refine((val) => !val || validatePhoneNumber(val), {
         message: 'Please enter a valid phone number (e.g., 123-456-7890)',
     })
-
-export const getCountryTldsMessage = (countryCode: string): string => {
-    const country = COUNTRIES.find((c) => c.code === countryCode)
-    if (!country || !country.tlds?.length) return ''
-    return `Expected domains: ${country.tlds.join(', ')}`
-}
 
 // Step 1 Schema - Personal Information
 export const personalInfoSchema = z.object({

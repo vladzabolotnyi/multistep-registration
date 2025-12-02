@@ -9,7 +9,7 @@ import Step2Address from '../forms/Step2Address'
 import Step3Account from '../forms/Step3Account'
 import ReviewStep from '../forms/ReviewStep'
 import { useFormContext } from '../../contexts/FormContext'
-import { COUNTRIES, STEPS } from '../../utils/constants'
+import { STEPS } from '../../utils/constants'
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa'
 import {
     personalInfoSchema,
@@ -17,6 +17,7 @@ import {
     accountSchema,
     combinedSchema,
 } from '../../lib/validation/schemas'
+import { useLocation } from '../../contexts/LocationContext'
 
 const MultiStepForm: React.FC = () => {
     const {
@@ -31,6 +32,7 @@ const MultiStepForm: React.FC = () => {
         nextStep,
         prevStep,
     } = useFormContext()
+    const { countries } = useLocation()
 
     const getStepSchema = () => {
         switch (currentStep) {
@@ -68,13 +70,12 @@ const MultiStepForm: React.FC = () => {
     const handleNext = async () => {
         if (currentStep === 4) return
 
-        // For Step 2: Email domain validation
         if (currentStep === 2) {
             const email = methods.getValues('email')
             const country = methods.getValues('country')
 
             if (email && country) {
-                const selectedCountry = COUNTRIES.find((c) => c.code === country)
+                const selectedCountry = countries.find((c) => c.code === country)
                 if (selectedCountry?.tlds?.length) {
                     const isValidDomain = selectedCountry.tlds.some((tld) =>
                         email.toLowerCase().endsWith(tld.toLowerCase()),
