@@ -14,6 +14,7 @@ import { FaArrowLeft, FaArrowRight } from 'react-icons/fa'
 import { useStepValidation } from '../../hooks/useStepValidation'
 import { type FullFormData, getStepSchema } from '../../lib/validation/schemas'
 import { createDefaultFormData } from '../../utils/form'
+import { useFormSubmission } from '../../hooks/useFormSubmission'
 
 const MultiStepForm: React.FC = () => {
     const {
@@ -23,7 +24,6 @@ const MultiStepForm: React.FC = () => {
         isLoading,
         setCurrentStep,
         setErrors,
-        setIsLoading,
         clearForm,
         nextStep,
         prevStep,
@@ -35,6 +35,18 @@ const MultiStepForm: React.FC = () => {
         mode: 'onChange',
         resolver: zodResolver(getStepSchema(currentStep)),
     })
+
+    const { isSubmitting, submitError, handleSubmit, clearError, resetSubmission } =
+        useFormSubmission({
+            methods,
+            onSuccess: () => {
+                alert('Registration submitted successfully!')
+                clearForm()
+                methods.reset(createDefaultFormData())
+                setCurrentStep(1)
+                resetSubmission()
+            },
+        })
 
     const { validateStep } = useStepValidation({
         currentStep,
@@ -105,42 +117,6 @@ const MultiStepForm: React.FC = () => {
         }
     }
 
-    const handleSubmit = async () => {
-        setIsLoading(true)
-
-        try {
-            const formValues = methods.getValues()
-            const isValid = await methods.trigger()
-
-            if (!isValid) {
-                alert('Please fix validation errors before submitting.')
-                return
-            }
-
-            console.log('Submitting form:', formValues)
-
-            // Simulate API call
-            await new Promise((resolve) => setTimeout(resolve, 1500))
-
-            // TODO: Replace with actual API call
-            // const response = await fetch('/api/register', {
-            //   method: 'POST',
-            //   headers: { 'Content-Type': 'application/json' },
-            //   body: JSON.stringify(formValues)
-            // })
-
-            alert('Registration submitted successfully!')
-            clearForm()
-            methods.reset(createDefaultFormData())
-            setCurrentStep(1)
-        } catch (error) {
-            console.error('Submission error:', error)
-            alert('Error submitting form. Please try again.')
-        } finally {
-            setIsLoading(false)
-        }
-    }
-
     const renderStep = () => {
         switch (currentStep) {
             case 1:
@@ -151,7 +127,13 @@ const MultiStepForm: React.FC = () => {
                 return <AccountSetupStep />
             case 4:
                 return (
-                    <ReviewStep onSubmit={handleSubmit} formData={methods.getValues()} />
+                    <ReviewStep
+                        onSubmit={handleSubmit}
+                        formData={methods.getValues()}
+                        isSubmitting={isSubmitting}
+                        submitError={submitError}
+                        onClearError={clearError}
+                    />
                 )
             default:
                 return null
