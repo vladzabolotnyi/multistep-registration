@@ -11,24 +11,9 @@ import ReviewStep from '../forms/ReviewStep'
 import { useFormContext } from '../../contexts/FormContext'
 import { STEPS } from '../../utils/constants'
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa'
-import { getStepSchema } from '../../lib/validation/stepSchemas'
 import { useStepValidation } from '../../hooks/useStepValidation'
-
-const defaultFormData = {
-    firstName: '',
-    lastName: '',
-    email: '',
-    phoneNumber: '',
-    streetAddress: '',
-    city: '',
-    state: '',
-    country: '',
-    username: '',
-    password: '',
-    confirmPassword: '',
-    acceptTerms: false,
-    newsletter: false,
-}
+import { getStepSchema } from '../../lib/validation/schemas'
+import { createDefaultFormData } from '../../utils/form'
 
 const MultiStepForm: React.FC = () => {
     const {
@@ -148,7 +133,7 @@ const MultiStepForm: React.FC = () => {
 
             alert('Registration submitted successfully!')
             clearForm()
-            methods.reset(defaultFormData)
+            methods.reset(createDefaultFormData())
             setCurrentStep(1)
         } catch (error) {
             console.error('Submission error:', error)
@@ -224,7 +209,7 @@ const MultiStepForm: React.FC = () => {
                                         )
                                     ) {
                                         clearForm()
-                                        methods.reset(defaultFormData)
+                                        methods.reset(createDefaultFormData)
                                     }
                                 }}
                                 disabled={isLoading}

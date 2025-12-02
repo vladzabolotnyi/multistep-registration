@@ -110,3 +110,16 @@ export type PersonalInfoFormData = z.infer<typeof personalInfoSchema>
 export type AddressFormData = z.infer<typeof addressSchema>
 export type AccountFormData = z.infer<typeof accountSchema>
 export type FullFormData = z.infer<typeof combinedSchema>
+
+export const getStepSchema = (step: number) => {
+    switch (step) {
+        case 1:
+            return personalInfoSchema
+        case 2:
+            return addressSchema
+        case 3:
+            return accountSchema
+        default:
+            return z.object({})
+    }
+}

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react'
 import type { FormData, FormStep } from '../types/form'
+import { createDefaultFormData } from '../utils/form'
 
 interface FormContextType {
     formData: FormData
@@ -15,26 +16,10 @@ interface FormContextType {
     prevStep: () => void
 }
 
-const defaultFormData: FormData = {
-    firstName: '',
-    lastName: '',
-    email: '',
-    phoneNumber: '',
-    streetAddress: '',
-    city: '',
-    state: '',
-    country: '',
-    username: '',
-    password: '',
-    confirmPassword: '',
-    acceptTerms: false,
-    newsletter: false,
-}
-
 const FormContext = createContext<FormContextType | undefined>(undefined)
 
 export const FormProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [formData, setFormData] = useState<FormData>(defaultFormData)
+    const [formData, setFormData] = useState<FormData>(createDefaultFormData())
     const [currentStep, setCurrentStep] = useState<FormStep>(1)
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [isLoading, setIsLoading] = useState(false)
@@ -47,7 +32,7 @@ export const FormProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [])
 
     const clearForm = useCallback(() => {
-        setFormData(defaultFormData)
+        setFormData(createDefaultFormData())
         setCurrentStep(1)
         setErrors({})
     }, [])
