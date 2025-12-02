@@ -4,7 +4,6 @@ import Input from '../common/Input'
 import Select from '../common/Select'
 import Alert from '../common/Alert'
 import Button from '../common/Button'
-import { useLocationData } from '../../hooks/useLocationData'
 import {
     FaMapMarkerAlt,
     FaCity,
@@ -13,6 +12,7 @@ import {
     FaSync,
     FaSpinner,
 } from 'react-icons/fa'
+import { useLocation } from '../../contexts/LocationContext'
 
 const Step2Address: React.FC = () => {
     const {
@@ -39,9 +39,7 @@ const Step2Address: React.FC = () => {
         refreshCountries,
         source,
         clearError,
-    } = useLocationData({
-        initialCountryCode: countryCode,
-    })
+    } = useLocation()
 
     const [emailDomainError, setEmailDomainError] = useState<string>('')
     const [isRefreshing, setIsRefreshing] = useState(false)
