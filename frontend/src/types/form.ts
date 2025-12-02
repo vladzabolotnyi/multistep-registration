@@ -16,7 +16,6 @@ export type FormData = {
     newsletter: boolean
 }
 
-// 4 is review step
 export type FormStep = 1 | 2 | 3 | 4
 
 export type Country = {
@@ -30,16 +29,4 @@ export type State = {
     code: string
     name: string
     countryCode: string
-}
-
-export type ApiResponse<T = any> = {
-    success: boolean
-    data?: T
-    error?: string
-    validationErrors?: Record<string, string>
-}
-
-export type UsernameAvailabilityResponse = {
-    available: boolean
-    message: string
 }

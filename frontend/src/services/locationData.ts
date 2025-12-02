@@ -1,17 +1,5 @@
 import axios from 'axios'
-
-export interface Country {
-    code: string
-    name: string
-    flag: string
-    tlds: string[]
-}
-
-export interface State {
-    code: string
-    name: string
-    countryCode: string
-}
+import type { Country, State } from '../types/form'
 
 const CACHE_DURATION = 24 * 60 * 60 * 1000
 const CACHE_KEY_COUNTRIES = 'countries_cache'
@@ -89,7 +77,7 @@ type RegionResponseAPI = {
 }
 
 export const fetchRegionsFromAPI = async (countryCode: string): Promise<State[]> => {
-    // TODO: Replace with env variable
+    // FIX: This api key is for demo only. NEVER SAVE SENS DATA ON REPO.
     const GEO_API_KEY = '0ed9565ab1mshf4b1b7721426573p149399jsn6b61ac43f1b8'
 
     if (!GEO_API_KEY) {
