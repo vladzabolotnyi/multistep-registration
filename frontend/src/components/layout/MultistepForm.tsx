@@ -4,10 +4,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import ProgressBar from '../common/ProgressBar'
 import Button from '../common/Button'
 import Alert from '../common/Alert'
-import Step1Personal from '../forms/Step1Personal'
-import Step2Address from '../forms/Step2Address'
-import Step3Account from '../forms/Step3Account'
-import ReviewStep from '../forms/ReviewStep'
+import PersonalInfoStep from '../steps/PersonalInfoStep'
+import AddressDetailsStep from '../steps/AddressDetailsStep'
+import AccountSetupStep from '../steps/AccountSetupStep'
+import ReviewStep from '../steps/ReviewStep'
 import { useFormContext } from '../../contexts/FormContext'
 import { STEPS } from '../../utils/constants'
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa'
@@ -146,11 +146,11 @@ const MultiStepForm: React.FC = () => {
     const renderStep = () => {
         switch (currentStep) {
             case 1:
-                return <Step1Personal />
+                return <PersonalInfoStep />
             case 2:
-                return <Step2Address />
+                return <AddressDetailsStep />
             case 3:
-                return <Step3Account />
+                return <AccountSetupStep />
             case 4:
                 return (
                     <ReviewStep onSubmit={handleSubmit} formData={methods.getValues()} />

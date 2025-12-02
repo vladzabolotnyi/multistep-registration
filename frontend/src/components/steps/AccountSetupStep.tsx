@@ -16,7 +16,7 @@ import {
 import { checkPasswordStrength } from '../../lib/validation/schemas'
 import { useUsernameValidation } from '../../hooks/useUsernameValidation'
 
-const Step3Account: React.FC = () => {
+const AccountSetupStep: React.FC = () => {
     const {
         register,
         formState: { errors, dirtyFields },
@@ -287,4 +287,4 @@ const Step3Account: React.FC = () => {
     )
 }
 
-export default Step3Account
+export default AccountSetupStep

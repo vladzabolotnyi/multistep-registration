@@ -15,7 +15,7 @@ import {
 import { useLocation } from '../../contexts/LocationContext'
 import { useEmailDomainValidation } from '../../hooks/useEmailDomainValidation'
 
-const Step2Address: React.FC = () => {
+const AddressDetailsStep: React.FC = () => {
     const {
         register,
         formState: { errors, dirtyFields },
@@ -218,4 +218,4 @@ const Step2Address: React.FC = () => {
     )
 }
 
-export default Step2Address
+export default AddressDetailsStep

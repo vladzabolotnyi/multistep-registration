@@ -3,7 +3,7 @@ import { useFormContext } from 'react-hook-form'
 import Input from '../common/Input'
 import { FaUser, FaEnvelope, FaPhone } from 'react-icons/fa'
 
-const Step1Personal: React.FC = () => {
+const PersonalInfoStep: React.FC = () => {
     const {
         register,
         formState: { errors, dirtyFields },
@@ -88,4 +88,4 @@ const Step1Personal: React.FC = () => {
     )
 }
 
-export default Step1Personal
+export default PersonalInfoStep
