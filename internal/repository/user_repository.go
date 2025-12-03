@@ -29,11 +29,15 @@ func NewUserRepository(conn sqlc.DBTX) UserRepository {
 }
 
 func (r *userRepository) CreateUser(ctx context.Context, user *domain.User) error {
+	var phoneNumber string
+	if user.PhoneNumber != nil {
+		phoneNumber = *user.PhoneNumber
+	}
 	params := sqlc.CreateUserParams{
 		FirstName:     user.FirstName,
 		LastName:      user.LastName,
 		Email:         user.Email,
-		PhoneNumber:   pgtype.Text{String: *user.PhoneNumber},
+		PhoneNumber:   pgtype.Text{String: phoneNumber},
 		StreetAddress: user.StreetAddress,
 		City:          user.City,
 		State:         user.State,
