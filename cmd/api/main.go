@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"multistep-registration/internal/database"
 	"multistep-registration/internal/server"
 )
 
@@ -39,7 +41,46 @@ func gracefulShutdown(apiServer *http.Server, done chan bool) {
 
 func main() {
 
-	server := server.NewServer()
+	ctx := context.Background()
+	dbConfig := database.LoadConfig()
+	connStr := fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Password,
+		dbConfig.DBName, dbConfig.SSLMode,
+	)
+	sqlDB, err := sql.Open("postgres", connStr)
+	if err != nil {
+		log.Fatal("Failed to open database connection:", err)
+	}
+	defer sqlDB.Close()
+
+	// migrationsPath := os.Getenv("MIGRATIONS_PATH")
+	// if migrationsPath == "" {
+	// 	cwd, err := os.Getwd()
+	// 	if err != nil {
+	// 		log.Fatal("Failed to get current directory:", err)
+	// 	}
+	// 	migrationsPath = filepath.Join(cwd, "migrations")
+	//
+	// 	if _, err := os.Stat(migrationsPath); os.IsNotExist(err) {
+	// 		migrationsPath = "/app/migrations"
+	// 	}
+	// }
+	//
+	// log.Printf("Using migrations path: %s", migrationsPath)
+	//
+	// migrator := database.NewMigrator("../../internal/database/migrations")
+	// if err := migrator.RunMigrations(sqlDB, dbConfig.DBName); err != nil {
+	// 	panic(fmt.Sprintf("failed to run migrations: %s", err))
+	// }
+
+	pool, err := database.NewPool(ctx, dbConfig)
+	if err != nil {
+		panic(fmt.Sprintf("database error: %s", err))
+	}
+	defer pool.Close()
+
+	server := server.NewServer(server.ServerProps{DB: pool})
 
 	// Create a done channel to signal when the shutdown is complete
 	done := make(chan bool, 1)
@@ -47,7 +88,7 @@ func main() {
 	// Run graceful shutdown in a separate goroutine
 	go gracefulShutdown(server, done)
 
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		panic(fmt.Sprintf("http server error: %s", err))
 	}
