@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"multistep-registration/internal/domain"
 	"multistep-registration/internal/repository"
@@ -9,6 +10,11 @@ import (
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
+)
+
+var (
+	ErrEmailAlreadyRegistered = errors.New("email already registered")
+	ErrUsernameAlreadyTaken   = errors.New("username already taken")
 )
 
 type UserService interface {
@@ -40,7 +46,7 @@ func (s *userService) Register(ctx context.Context, req *domain.RegistrationRequ
 		return nil, fmt.Errorf("failed to check email: %w", err)
 	}
 	if emailExists {
-		return nil, fmt.Errorf("email already registered")
+		return nil, ErrEmailAlreadyRegistered
 	}
 
 	usernameExists, err := s.repo.CheckUsernameExists(ctx, req.Username)
@@ -48,7 +54,7 @@ func (s *userService) Register(ctx context.Context, req *domain.RegistrationRequ
 		return nil, fmt.Errorf("failed to check username: %w", err)
 	}
 	if usernameExists {
-		return nil, fmt.Errorf("username already taken")
+		return nil, ErrUsernameAlreadyTaken
 	}
 
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(req.Password), s.cost)
