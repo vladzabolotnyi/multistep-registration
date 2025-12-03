@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"multistep-registration/internal/constants"
 	"multistep-registration/internal/context"
 	"multistep-registration/internal/domain"
 	"multistep-registration/internal/service"
@@ -16,7 +17,7 @@ func (s *Server) Register(c *gin.Context) {
 
 	if !exists {
 		c.JSON(http.StatusBadRequest, domain.ErrorResponse{
-			Code:    CodeValidationError,
+			Code:    constants.CodeValidationError,
 			Message: "Invalid request data",
 		})
 		return
@@ -27,12 +28,12 @@ func (s *Server) Register(c *gin.Context) {
 		switch {
 		case errors.Is(err, service.ErrUsernameAlreadyTaken) || errors.Is(err, service.ErrEmailAlreadyRegistered):
 			c.JSON(http.StatusConflict, domain.ErrorResponse{
-				Code:    CodeDuplicateError,
+				Code:    constants.CodeDuplicateError,
 				Message: err.Error(),
 			})
 		default:
 			c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
-				Code:    CodeInternalError,
+				Code:    constants.CodeInternalError,
 				Message: "Failed to process registration",
 			})
 		}
@@ -47,7 +48,7 @@ func (s *Server) CheckUsername(c *gin.Context) {
 	username := c.Query("username")
 	if username == "" {
 		c.JSON(http.StatusBadRequest, domain.ErrorResponse{
-			Code:    CodeValidationError,
+			Code:    constants.CodeValidationError,
 			Message: "Username is required",
 		})
 		return
@@ -56,7 +57,7 @@ func (s *Server) CheckUsername(c *gin.Context) {
 	available, err := s.userService.CheckUsernameAvailability(c.Request.Context(), username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
-			Code:    CodeInternalError,
+			Code:    constants.CodeInternalError,
 			Message: "Failed to check username availability",
 		})
 		return
@@ -73,7 +74,7 @@ func (s *Server) CheckEmail(c *gin.Context) {
 	email := c.Query("email")
 	if email == "" {
 		c.JSON(http.StatusBadRequest, domain.ErrorResponse{
-			Code:    CodeValidationError,
+			Code:    constants.CodeValidationError,
 			Message: "Email is required",
 		})
 		return
@@ -82,7 +83,7 @@ func (s *Server) CheckEmail(c *gin.Context) {
 	available, err := s.userService.CheckEmailAvailability(c.Request.Context(), email)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, domain.ErrorResponse{
-			Code:    CodeInternalError,
+			Code:    constants.CodeInternalError,
 			Message: "Failed to check email availability",
 		})
 		return

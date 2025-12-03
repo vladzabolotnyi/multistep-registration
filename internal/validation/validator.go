@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"multistep-registration/internal/constants"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -68,7 +69,7 @@ func (vc *Chain) Middleware() gin.HandlerFunc {
 
 		if len(errors) > 0 {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"code":   "VALIDATION_ERROR",
+				"code":   constants.CodeValidationError,
 				"errors": errors,
 			})
 			c.Abort()

@@ -1,4 +1,4 @@
-package server
+package constants
 
 const (
 	CodeValidationError = "VALIDATION_ERROR"
