@@ -1,6 +1,7 @@
 package server
 
 import (
+	"multistep-registration/internal/validation"
 	"net/http"
 
 	"github.com/gin-contrib/cors"
@@ -9,6 +10,7 @@ import (
 
 func (s *Server) RegisterRoutes() http.Handler {
 	r := gin.Default()
+	registrationChain := validation.CreateDefaultRegistrationChain()
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173"},
@@ -18,13 +20,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	}))
 	api := r.Group("/api")
 	{
-		api.POST("/register", func(c *gin.Context) {
-			validationChain := NewMiddlewareChain()
-			validationChain.Add(LoggingMiddleware())
-			validationChain.Add(s.validateRegistrationMiddleware())
-
-			validationChain.Then(s.Register)(c)
-		})
+		api.POST("/register", registrationChain.Middleware(), s.Register)
 
 		api.GET("/check-username", s.CheckUsername)
 		api.GET("/check-email", s.CheckEmail)

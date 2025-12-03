@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"multistep-registration/internal/context"
 	"multistep-registration/internal/domain"
 	"multistep-registration/internal/service"
 	"net/http"
@@ -11,32 +12,17 @@ import (
 
 // Register handles user creation
 func (s *Server) Register(c *gin.Context) {
-	var req domain.RegistrationRequest
+	req, exists := context.GetRegistrationRequest(c)
 
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if !exists {
 		c.JSON(http.StatusBadRequest, domain.ErrorResponse{
 			Code:    CodeValidationError,
 			Message: "Invalid request data",
-			Errors:  parseValidationErrors(err),
 		})
 		return
 	}
 
-	if validationErrors := s.userService.ValidateRegistration(&req); len(validationErrors) > 0 {
-		errors := make(map[string]string)
-		for _, err := range validationErrors {
-			errors[err.Field] = err.Message
-		}
-
-		c.JSON(http.StatusBadRequest, domain.ErrorResponse{
-			Code:    CodeValidationError,
-			Message: "Validation failed",
-			Errors:  errors,
-		})
-		return
-	}
-
-	resp, err := s.userService.Register(c.Request.Context(), &req)
+	resp, err := s.userService.Register(c.Request.Context(), req)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrUsernameAlreadyTaken) || errors.Is(err, service.ErrEmailAlreadyRegistered):

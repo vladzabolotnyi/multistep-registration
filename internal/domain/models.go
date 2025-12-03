@@ -40,7 +40,7 @@ type RegistrationRequest struct {
 	State         string `json:"state" binding:"required,min=1,max=100"`
 	Country       string `json:"country" binding:"required,min=1,max=100"`
 
-	Username        string `json:"username" binding:"required,min=3,max=50,alphanum"`
+	Username        string `json:"username" binding:"required,min=6,max=50,alphanum"`
 	Password        string `json:"password" binding:"required,min=8"`
 	ConfirmPassword string `json:"confirmPassword" binding:"required,eqfield=Password"`
 
