@@ -1,5 +1,8 @@
 all: build test
 
+DB_CONTAINER_NAME := registration-postgres
+DB_IMAGE := postgres:15-alpine
+
 build:
 	@echo "Building..."
 	
@@ -50,4 +53,24 @@ watch:
             fi; \
         fi
 
-.PHONY: all build run test clean watch docker-run docker-down itest
+db-up:
+	@echo "Starting PostgreSQL container: $(DB_CONTAINER_NAME)..."
+	docker run -d \
+		--name $(DB_CONTAINER_NAME) \
+		-p 5432:5432 \
+		-e POSTGRES_DB=registration_db \
+		-e POSTGRES_USER=postgres \
+		-e POSTGRES_PASSWORD=postgres \
+		--health-cmd="pg_isready -U postgres" \
+		--health-interval=10s \
+		--health-timeout=5s \
+		--health-retries=5 \
+		--health-start-period=30s \
+		$(DB_IMAGE)
+
+db-down:
+	@echo "Stopping and removing container: $(DB_CONTAINER_NAME)..."
+	-docker stop $(DB_CONTAINER_NAME) 2>/dev/null || true
+	-docker rm $(DB_CONTAINER_NAME) 2>/dev/null || true
+
+.PHONY: all build run test clean watch docker-run docker-down itest db-up db-down
