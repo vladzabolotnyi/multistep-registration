@@ -48,7 +48,7 @@ const AccountSetupStep: React.FC = () => {
     } = useUsernameValidation()
 
     useEffect(() => {
-        if (!username || username.length < 6) {
+        if (!username || errors.username) {
             resetUsernameCheck()
             return
         }
