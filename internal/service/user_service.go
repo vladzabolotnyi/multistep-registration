@@ -31,12 +31,10 @@ func NewUserService(repo repository.UserRepository, cost int) UserService {
 }
 
 func (s *userService) Register(ctx context.Context, req *domain.RegistrationRequest) (*domain.RegistrationResponse, error) {
-	// Validate request
 	if errors := s.ValidateRegistration(req); len(errors) > 0 {
 		return nil, fmt.Errorf("validation failed: %v", errors)
 	}
 
-	// Check if email already exists
 	emailExists, err := s.repo.CheckEmailExists(ctx, req.Email)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check email: %w", err)
@@ -45,7 +43,6 @@ func (s *userService) Register(ctx context.Context, req *domain.RegistrationRequ
 		return nil, fmt.Errorf("email already registered")
 	}
 
-	// Check if username already exists
 	usernameExists, err := s.repo.CheckUsernameExists(ctx, req.Username)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check username: %w", err)
@@ -54,13 +51,11 @@ func (s *userService) Register(ctx context.Context, req *domain.RegistrationRequ
 		return nil, fmt.Errorf("username already taken")
 	}
 
-	// Hash password
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(req.Password), s.cost)
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash password: %w", err)
 	}
 
-	// Create user
 	user := &domain.User{
 		FirstName:     req.FirstName,
 		LastName:      req.LastName,
@@ -116,7 +111,6 @@ func (s *userService) CheckEmailAvailability(ctx context.Context, email string) 
 func (s *userService) ValidateRegistration(req *domain.RegistrationRequest) []domain.ValidationError {
 	var errors []domain.ValidationError
 
-	// Password strength validation
 	if !isStrongPassword(req.Password) {
 		errors = append(errors, domain.ValidationError{
 			Field:   "password",
@@ -125,14 +119,12 @@ func (s *userService) ValidateRegistration(req *domain.RegistrationRequest) []do
 	}
 
 	// Country/email domain validation (example: if country is US, email should be .com, .org, etc.)
-	if req.Country == "US" && !isValidUSEmail(req.Email) {
-		errors = append(errors, domain.ValidationError{
-			Field:   "email",
-			Message: "For US registrations, please use a .com, .org, .edu, or .gov email address",
-		})
-	}
-
-	// Additional business logic validations can go here
+	// if req.Country == "US" && !isValidUSEmail(req.Email) {
+	// 	errors = append(errors, domain.ValidationError{
+	// 		Field:   "email",
+	// 		Message: "For US registrations, please use a .com, .org, .edu, or .gov email address",
+	// 	})
+	// }
 
 	return errors
 }

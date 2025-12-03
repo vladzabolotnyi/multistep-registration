@@ -13,7 +13,6 @@ import (
 func (s *Server) Register(c *gin.Context) {
 	var req domain.RegistrationRequest
 
-	// Bind JSON request
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, domain.ErrorResponse{
 			Code:    "VALIDATION_ERROR",
@@ -23,7 +22,6 @@ func (s *Server) Register(c *gin.Context) {
 		return
 	}
 
-	// Run service validation
 	if validationErrors := s.userService.ValidateRegistration(&req); len(validationErrors) > 0 {
 		errors := make(map[string]string)
 		for _, err := range validationErrors {
@@ -38,10 +36,8 @@ func (s *Server) Register(c *gin.Context) {
 		return
 	}
 
-	// Process registration
 	resp, err := s.userService.Register(c.Request.Context(), &req)
 	if err != nil {
-		// Check if it's a duplicate error
 		if strings.Contains(err.Error(), "already") {
 			c.JSON(http.StatusConflict, domain.ErrorResponse{
 				Code:    "DUPLICATE_ERROR",
