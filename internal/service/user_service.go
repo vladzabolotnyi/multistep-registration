@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"multistep-registration/internal/domain"
 	"multistep-registration/internal/repository"
-	"regexp"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -85,10 +84,6 @@ func (s *userService) Register(ctx context.Context, req *domain.RegistrationRequ
 }
 
 func (s *userService) CheckUsernameAvailability(ctx context.Context, username string) (bool, error) {
-	if !isValidUsername(username) {
-		return false, nil
-	}
-
 	exists, err := s.repo.CheckUsernameExists(ctx, username)
 	if err != nil {
 		return false, fmt.Errorf("failed to check username: %w", err)
@@ -97,27 +92,9 @@ func (s *userService) CheckUsernameAvailability(ctx context.Context, username st
 }
 
 func (s *userService) CheckEmailAvailability(ctx context.Context, email string) (bool, error) {
-	if !isValidEmail(email) {
-		return false, nil
-	}
-
 	exists, err := s.repo.CheckEmailExists(ctx, email)
 	if err != nil {
 		return false, fmt.Errorf("failed to check email: %w", err)
 	}
 	return !exists, nil
-}
-
-// Helper functions
-func isValidUsername(username string) bool {
-	// Alphanumeric, 3-50 characters
-	match, _ := regexp.MatchString(`^[a-zA-Z0-9]{3,50}$`, username)
-	return match
-}
-
-func isValidEmail(email string) bool {
-	// Simple email regex for validation
-	emailRegex := `^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`
-	match, _ := regexp.MatchString(emailRegex, email)
-	return match
 }

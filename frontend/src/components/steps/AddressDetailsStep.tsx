@@ -27,7 +27,7 @@ const AddressDetailsStep: React.FC = () => {
     const streetAddress = watch('streetAddress')
     const city = watch('city')
     const stateValue = watch('state')
-    const countryCode = watch('country')
+    const country = watch('country')
     const email = watch('email')
 
     const {
@@ -42,11 +42,11 @@ const AddressDetailsStep: React.FC = () => {
         clearError,
     } = useLocation()
 
-    const emailValidation = useEmailDomainValidation(email, countryCode)
+    const emailValidation = useEmailDomainValidation(email, country)
 
     const countryOptions = useMemo(() => {
         return countries.map((country) => ({
-            value: country.code,
+            value: country.name,
             label: `${country.name} ${country.flag || ''}`.trim(),
         }))
     }, [countries])
@@ -59,27 +59,27 @@ const AddressDetailsStep: React.FC = () => {
     }, [states])
 
     useEffect(() => {
-        if (countryCode) {
-            loadStates(countryCode)
+        if (country) {
+            loadStates(country)
         }
-    }, [countryCode, loadStates])
+    }, [country, loadStates])
 
     useEffect(() => {
-        if (countryCode && !isLoading && countries.length > 0) {
-            const countryExists = countries.some((c) => c.code === countryCode)
+        if (country && !isLoading && countries.length > 0) {
+            const countryExists = countries.some((c) => c.name === country)
             if (!countryExists) {
                 setValue('country', '')
             }
         }
-    }, [countryCode, countries, isLoading, setValue])
+    }, [country, countries, isLoading, setValue])
 
     const handleCountryChange = useCallback(
         (e: React.ChangeEvent<HTMLSelectElement>) => {
-            const newCountryCode = e.target.value
-            setValue('country', newCountryCode)
+            const newCountry = e.target.value
+            setValue('country', newCountry)
 
             const currentCountry = getValues('country')
-            if (currentCountry !== newCountryCode) {
+            if (currentCountry !== newCountry) {
                 setValue('state', '')
             }
         },
@@ -156,9 +156,9 @@ const AddressDetailsStep: React.FC = () => {
                         onChange={handleCountryChange}
                         required
                         leftIcon={<FaGlobeAmericas />}
-                        showSuccess={getFieldStatus('country', countryCode) === 'success'}
+                        showSuccess={getFieldStatus('country', country) === 'success'}
                         disabled={isLoading}
-                        value={countryCode}
+                        value={country}
                     />
                     <div className="absolute right-0 top-8">
                         <Button
@@ -183,7 +183,7 @@ const AddressDetailsStep: React.FC = () => {
                     placeholder={
                         isLoading
                             ? 'Loading...'
-                            : !countryCode
+                            : !country
                               ? 'Select country first'
                               : states.length === 0
                                 ? 'No states available'
@@ -192,7 +192,7 @@ const AddressDetailsStep: React.FC = () => {
                     error={errors.state?.message as string}
                     {...register('state')}
                     helperText={
-                        !countryCode
+                        !country
                             ? 'Please select a country first'
                             : states.length === 0
                               ? 'No states/provinces for this country'
@@ -201,7 +201,7 @@ const AddressDetailsStep: React.FC = () => {
                     required={states.length > 0}
                     leftIcon={<FaFlag />}
                     showSuccess={getFieldStatus('state', stateValue) === 'success'}
-                    disabled={!countryCode || isLoading || states.length === 0}
+                    disabled={!country || isLoading || states.length === 0}
                     value={stateValue}
                 />
             </div>

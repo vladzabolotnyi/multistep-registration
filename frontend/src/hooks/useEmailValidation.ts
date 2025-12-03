@@ -2,13 +2,13 @@ import { useState, useCallback } from 'react'
 import { apiService } from '../services/api'
 import type { ErrorResponse } from '../services/api.types'
 
-export const useUsernameValidation = () => {
+export const useEmailValidation = () => {
     const [isChecking, setIsChecking] = useState(false)
     const [isAvailable, setIsAvailable] = useState<boolean | null>(null)
     const [error, setError] = useState<string | null>(null)
 
-    const checkUsername = useCallback(async (username: string): Promise<boolean> => {
-        if (!username || username.length < 6) {
+    const checkEmail = useCallback(async (email: string): Promise<boolean> => {
+        if (!email) {
             setIsAvailable(null)
             return false
         }
@@ -16,7 +16,7 @@ export const useUsernameValidation = () => {
         setIsChecking(true)
 
         try {
-            const { available } = await apiService.checkUsername(username)
+            const { available } = await apiService.checkEmail(email)
             setIsAvailable(available)
 
             return available
@@ -37,7 +37,7 @@ export const useUsernameValidation = () => {
     }, [])
 
     return {
-        checkUsername,
+        checkEmail,
         isChecking,
         isAvailable,
         reset,

@@ -44,10 +44,11 @@ const AccountSetupStep: React.FC = () => {
         isChecking,
         isAvailable,
         reset: resetUsernameCheck,
+        error: validationError,
     } = useUsernameValidation()
 
     useEffect(() => {
-        if (!username || username.length < 6) {
+        if (!username || errors.username) {
             resetUsernameCheck()
             return
         }
@@ -118,7 +119,7 @@ const AccountSetupStep: React.FC = () => {
                     label="Username"
                     type="text"
                     placeholder="Choose a username"
-                    error={errors.username?.message as string}
+                    error={validationError || (errors.username?.message as string)}
                     {...register('username')}
                     helperText="Minimum 6 characters, letters, numbers, and underscores only"
                     required

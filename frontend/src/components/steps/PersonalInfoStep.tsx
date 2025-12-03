@@ -1,13 +1,23 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useFormContext } from 'react-hook-form'
 import Input from '../common/Input'
-import { FaUser, FaEnvelope, FaPhone } from 'react-icons/fa'
+import {
+    FaUser,
+    FaEnvelope,
+    FaPhone,
+    FaSpinner,
+    FaCheckCircle,
+    FaTimesCircle,
+} from 'react-icons/fa'
+import { useEmailValidation } from '../../hooks/useEmailValidation'
 
 const PersonalInfoStep: React.FC = () => {
     const {
         register,
         formState: { errors, dirtyFields },
         watch,
+        setError,
+        clearErrors,
     } = useFormContext()
 
     const firstName = watch('firstName')
@@ -15,10 +25,53 @@ const PersonalInfoStep: React.FC = () => {
     const email = watch('email')
     const phoneNumber = watch('phoneNumber')
 
+    const {
+        checkEmail,
+        isChecking,
+        isAvailable,
+        reset: resetEmailCheck,
+        error: validationError,
+    } = useEmailValidation()
+
     const getFieldStatus = (fieldName: string, value: string) => {
         if (errors[fieldName]) return 'error'
         if (dirtyFields[fieldName] && value && !errors[fieldName]) return 'success'
         return 'default'
+    }
+
+    useEffect(() => {
+        if (!email || errors.email) {
+            resetEmailCheck()
+            return
+        }
+
+        const timeoutId = setTimeout(async () => {
+            const available = await checkEmail(email)
+
+            if (!available) {
+                setError('email', {
+                    type: 'manual',
+                    message: `Email "${email}" is already taken`,
+                })
+            } else {
+                clearErrors('email')
+            }
+        }, 1000)
+
+        return () => clearTimeout(timeoutId)
+    }, [email, checkEmail, setError, clearErrors, resetEmailCheck, errors.email])
+
+    const getEmailRightIcon = () => {
+        if (isChecking) {
+            return <FaSpinner className="text-gray-400 animate-spin" />
+        }
+        if (isAvailable === true && email) {
+            return <FaCheckCircle className="text-green-500" />
+        }
+        if (isAvailable === false) {
+            return <FaTimesCircle className="text-red-500" />
+        }
+        return null
     }
 
     return (
@@ -63,12 +116,15 @@ const PersonalInfoStep: React.FC = () => {
                 label="Email Address"
                 type="email"
                 placeholder="Enter your email address"
-                error={errors.email?.message as string}
+                error={validationError || (errors.email?.message as string)}
                 {...register('email')}
                 helperText="We'll never share your email with anyone else"
                 required
                 leftIcon={<FaEnvelope />}
-                showSuccess={getFieldStatus('email', email) === 'success'}
+                rightIcon={getEmailRightIcon()}
+                showSuccess={
+                    getFieldStatus('email', email) === 'success' && isAvailable === true
+                }
             />
 
             <Input

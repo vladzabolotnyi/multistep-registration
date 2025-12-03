@@ -1,17 +1,13 @@
 import { useMemo } from 'react'
 import { useLocation } from '../contexts/LocationContext'
 
-export const useEmailDomainValidation = (email: string, countryCode: string) => {
+export const useEmailDomainValidation = (email: string, country: string) => {
     const { countries } = useLocation()
 
     const validation = useMemo(() => {
-        if (!email || !countryCode) {
-            return { isValid: true, error: null }
-        }
+        const selectedCountry = countries.find((c) => c.name === country)
 
-        const selectedCountry = countries.find((c) => c.code === countryCode)
-
-        if (!selectedCountry?.tlds?.length) {
+        if (!selectedCountry?.tlds?.length || !email) {
             return { isValid: true, error: null }
         }
 
@@ -27,7 +23,7 @@ export const useEmailDomainValidation = (email: string, countryCode: string) => 
         }
 
         return { isValid: true, error: null }
-    }, [email, countryCode, countries])
+    }, [email, countries, country])
 
     return validation
 }
