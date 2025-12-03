@@ -41,7 +41,7 @@ type RegistrationRequest struct {
 	Country       string `json:"country" binding:"required,min=1,max=100"`
 
 	Username        string `json:"username" binding:"required,min=6,max=50,alphanum"`
-	Password        string `json:"password" binding:"required,min=8"`
+	Password        string `json:"password" binding:"required,min=8,max=72"`
 	ConfirmPassword string `json:"confirmPassword" binding:"required,eqfield=Password"`
 
 	AcceptTerms bool `json:"acceptTerms" binding:"required,eq=true"`

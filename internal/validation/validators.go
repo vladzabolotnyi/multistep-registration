@@ -64,6 +64,12 @@ func PasswordStrengthValidator() Validator {
 				Message: "Password must be at least 8 characters long",
 			}}
 		}
+		if len(req.Password) > 72 {
+			return []Error{{
+				Field:   "password",
+				Message: "Password must be 72 characters long at max",
+			}}
+		}
 
 		hasUpper := false
 		hasLower := false

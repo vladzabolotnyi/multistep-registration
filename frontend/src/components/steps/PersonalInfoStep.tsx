@@ -93,7 +93,6 @@ const PersonalInfoStep: React.FC = () => {
                     placeholder="Enter your first name"
                     error={errors.firstName?.message as string}
                     {...register('firstName')}
-                    helperText="e.g., John"
                     required
                     leftIcon={<FaUser />}
                     showSuccess={getFieldStatus('firstName', firstName) === 'success'}
@@ -105,7 +104,6 @@ const PersonalInfoStep: React.FC = () => {
                     placeholder="Enter your last name"
                     error={errors.lastName?.message as string}
                     {...register('lastName')}
-                    helperText="e.g., Doe"
                     required
                     leftIcon={<FaUser />}
                     showSuccess={getFieldStatus('lastName', lastName) === 'success'}
@@ -118,7 +116,6 @@ const PersonalInfoStep: React.FC = () => {
                 placeholder="Enter your email address"
                 error={validationError || (errors.email?.message as string)}
                 {...register('email')}
-                helperText="We'll never share your email with anyone else"
                 required
                 leftIcon={<FaEnvelope />}
                 rightIcon={getEmailRightIcon()}
