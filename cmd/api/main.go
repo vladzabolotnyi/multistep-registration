@@ -9,6 +9,8 @@ import (
 	"syscall"
 	"time"
 
+	"multistep-registration/internal/config"
+	"multistep-registration/internal/database"
 	"multistep-registration/internal/server"
 )
 
@@ -38,8 +40,27 @@ func gracefulShutdown(apiServer *http.Server, done chan bool) {
 }
 
 func main() {
+	cfg := config.Load()
 
-	server := server.NewServer()
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	db, err := database.NewDatabase(ctx, cfg)
+	if err != nil {
+		log.Fatalf("failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	migrator := database.NewMigrator(cfg.Database.MigrationsPath)
+	if version, dirty, err := migrator.CheckMigrationsStatus(db.SQL, cfg.Database.DBName); err == nil {
+		log.Printf("Current migration version: %d, dirty: %v", version, dirty)
+	}
+
+	if err := migrator.RunMigrations(db.SQL, cfg.Database.DBName); err != nil {
+		log.Fatalf("Failed to run migrations: %v", err)
+	}
+
+	server := server.NewServer(server.ServerProps{DB: db.Pool, Config: cfg})
 
 	// Create a done channel to signal when the shutdown is complete
 	done := make(chan bool, 1)
@@ -47,7 +68,7 @@ func main() {
 	// Run graceful shutdown in a separate goroutine
 	go gracefulShutdown(server, done)
 
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		panic(fmt.Sprintf("http server error: %s", err))
 	}

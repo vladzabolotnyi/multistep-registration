@@ -58,7 +58,7 @@ class ErrorBoundary extends Component<Props, State> {
 
             return (
                 <div className="error-boundary">
-                    <DefaultErrorFallback error={this.state.error} />
+                    <DefaultErrorFallback />
                 </div>
             )
         }

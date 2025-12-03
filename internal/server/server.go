@@ -2,31 +2,36 @@ package server
 
 import (
 	"fmt"
+	"multistep-registration/internal/config"
+	database "multistep-registration/internal/database/sqlc"
+	"multistep-registration/internal/repository"
+	"multistep-registration/internal/service"
 	"net/http"
-	"os"
-	"strconv"
 	"time"
 
 	_ "github.com/joho/godotenv/autoload"
-
-	"multistep-registration/internal/database"
 )
+
+type ServerProps struct {
+	Config *config.Config
+	DB     database.DBTX
+}
 
 type Server struct {
 	port int
 
-	db database.Service
+	userService service.UserService
 }
 
-func NewServer() *http.Server {
-	port, _ := strconv.Atoi(os.Getenv("PORT"))
+func NewServer(props ServerProps) *http.Server {
 	NewServer := &Server{
-		port: port,
-
-		db: database.New(),
+		port: props.Config.Server.Port,
 	}
 
-	// Declare Server config
+	userRepo := repository.NewUserRepository(props.DB)
+	userService := service.NewUserService(userRepo, props.Config.Security.PasswordCost)
+	NewServer.userService = userService
+
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%d", NewServer.port),
 		Handler:      NewServer.RegisterRoutes(),

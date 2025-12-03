@@ -6,7 +6,7 @@ interface ProgressStep {
 }
 
 interface ProgressBarProps {
-    steps: ProgressStep[]
+    steps: readonly ProgressStep[]
     currentStep: number
     onStepClick?: (step: number) => void
 }
