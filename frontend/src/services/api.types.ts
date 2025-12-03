@@ -10,6 +10,9 @@ export type ErrorResponse = {
 }
 
 export type RegistrationResponse = {
-    success: boolean
+    id: string
+    username: string
+    email: string
+    createdAt: string
     message: string
 }

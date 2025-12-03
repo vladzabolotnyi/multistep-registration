@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { type UseFormReturn } from 'react-hook-form'
-import { type FullFormData } from '../lib/validation/schemas'
+import { apiService } from '../services/api'
 
 interface UseFormSubmissionProps {
     methods: UseFormReturn<any>
@@ -10,12 +10,6 @@ interface UseFormSubmissionProps {
 interface SubmissionState {
     isSubmitting: boolean
     submitError: string | null
-}
-
-interface SubmissionResult {
-    success: boolean
-    error?: string
-    data?: any
 }
 
 export const useFormSubmission = ({ methods, onSuccess }: UseFormSubmissionProps) => {
@@ -39,23 +33,7 @@ export const useFormSubmission = ({ methods, onSuccess }: UseFormSubmissionProps
         })
     }, [])
 
-    const submitToApi = async (formData: FullFormData): Promise<SubmissionResult> => {
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-
-        const shouldFail = Math.random() < 0.5
-        if (shouldFail) {
-            throw new Error(
-                'Server error: Unable to process registration. Please try again.',
-            )
-        }
-
-        return {
-            success: true,
-            data: { id: Date.now(), ...formData },
-        }
-    }
-
-    const handleSubmit = useCallback(async (): Promise<SubmissionResult> => {
+    const handleSubmit = useCallback(async () => {
         setState((prev) => ({
             ...prev,
             isSubmitting: true,
@@ -65,26 +43,19 @@ export const useFormSubmission = ({ methods, onSuccess }: UseFormSubmissionProps
 
         try {
             const formValues = methods.getValues()
-            const result = await submitToApi(formValues)
+            if (!formValues.phoneNumber) {
+                delete formValues.phoneNumber
+            }
+            const response = await apiService.submitRegistration(formValues)
 
-            if (result.success) {
+            if (response.email) {
                 setState({
                     isSubmitting: false,
                     submitError: null,
                 })
                 onSuccess()
-            } else {
-                setState((prev) => ({
-                    ...prev,
-                    isSubmitting: false,
-                    submitError: result.error || 'Submission failed',
-                }))
             }
-
-            return result
         } catch (error) {
-            console.error('Submission error:', error)
-
             const errorMessage =
                 error instanceof Error
                     ? error.message
