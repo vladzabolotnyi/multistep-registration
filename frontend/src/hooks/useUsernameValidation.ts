@@ -1,18 +1,11 @@
 import { useState, useCallback } from 'react'
-
-// Mock API - replace with actual API call
-const TAKEN_USERNAMES = [
-    'john_doe',
-    'admin',
-    'testuser',
-    'username',
-    'demo123',
-    'user123',
-]
+import { apiService } from '../services/api'
+import type { ErrorResponse } from '../services/api.types'
 
 export const useUsernameValidation = () => {
     const [isChecking, setIsChecking] = useState(false)
     const [isAvailable, setIsAvailable] = useState<boolean | null>(null)
+    const [error, setError] = useState<string | null>(null)
 
     const checkUsername = useCallback(async (username: string): Promise<boolean> => {
         if (!username || username.length < 6) {
@@ -23,20 +16,15 @@ export const useUsernameValidation = () => {
         setIsChecking(true)
 
         try {
-            // Simulate API delay
-            await new Promise((resolve) => setTimeout(resolve, 500))
-
-            // TODO: Replace with actual API call
-            // const response = await fetch(`/api/check-username/${username}`)
-            // const data = await response.json()
-            // const available = data.available
-
-            const available = !TAKEN_USERNAMES.includes(username.toLowerCase())
+            const { available } = await apiService.checkUsername(username)
             setIsAvailable(available)
+
             return available
-        } catch (error) {
-            console.error('Username check failed:', error)
+        } catch (err) {
+            const errorResponse = err as ErrorResponse
+            setError(errorResponse.message)
             setIsAvailable(null)
+
             return false
         } finally {
             setIsChecking(false)
@@ -53,5 +41,6 @@ export const useUsernameValidation = () => {
         isChecking,
         isAvailable,
         reset,
+        error,
     }
 }

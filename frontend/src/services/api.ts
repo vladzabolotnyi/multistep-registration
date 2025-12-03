@@ -1,7 +1,12 @@
 import axios from 'axios'
 import type { FormData } from '../types/form'
+import type {
+    AvailabilityResponse,
+    ErrorResponse,
+    RegistrationResponse,
+} from './api.types'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1'
+const API_BASE_URL = 'http://localhost:8080/api'
 
 const api = axios.create({
     baseURL: API_BASE_URL,
@@ -10,29 +15,53 @@ const api = axios.create({
     },
 })
 
-api.interceptors.response.use(
-    (response) => response.data,
-    (error) => {
-        if (error.response) {
-            return Promise.reject(error.response.data)
-        } else if (error.request) {
-            return Promise.reject({ error: 'Network error. Please try again.' })
-        } else {
-            return Promise.reject({ error: error.message })
+export const apiService = {
+    checkUsername: async (username: string): Promise<AvailabilityResponse> => {
+        try {
+            const response = await api.get<AvailabilityResponse>('/check-username', {
+                params: { username },
+            })
+            return response.data
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response?.data) {
+                throw error.response.data as ErrorResponse
+            }
+            throw {
+                code: 'UNKNOWN_ERROR',
+                message: 'An unexpected error occurred',
+            } as ErrorResponse
         }
     },
-)
 
-export const apiService = {
-    checkUsername: async (username: string) => {
-        return api.post<{ available: boolean; message: string }>('/check-username', {
-            username,
-        })
+    checkEmail: async (email: string): Promise<AvailabilityResponse> => {
+        try {
+            const response = await api.get<AvailabilityResponse>('/check-email', {
+                params: { email },
+            })
+            return response.data
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response?.data) {
+                throw error.response.data as ErrorResponse
+            }
+            throw {
+                code: 'UNKNOWN_ERROR',
+                message: 'An unexpected error occurred',
+            } as ErrorResponse
+        }
     },
 
-    submitRegistration: async (data: FormData) => {
-        return api.post<{ success: boolean; message: string }>('/register', data)
+    submitRegistration: async (data: FormData): Promise<RegistrationResponse> => {
+        try {
+            const response = await api.post<RegistrationResponse>('/register', data)
+            return response.data
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response?.data) {
+                throw error.response.data as ErrorResponse
+            }
+            throw {
+                code: 'UNKNOWN_ERROR',
+                message: 'An unexpected error occurred',
+            } as ErrorResponse
+        }
     },
 }
-
-export default api
