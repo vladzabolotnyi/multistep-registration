@@ -54,8 +54,11 @@ func (vc *Chain) Validate(c *gin.Context) []Error {
 	var allErrors []Error
 
 	for _, validator := range vc.validators {
-		if errors := validator(c); len(errors) > 0 {
+		errors := validator(c)
+		if len(errors) > 0 {
 			allErrors = append(allErrors, errors...)
+			// If first validator fails there is no reason to run next one
+			break
 		}
 	}
 
