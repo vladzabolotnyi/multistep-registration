@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"multistep-registration/internal/config"
 	"multistep-registration/internal/database"
 	"multistep-registration/internal/server"
 )
@@ -40,47 +40,16 @@ func gracefulShutdown(apiServer *http.Server, done chan bool) {
 }
 
 func main() {
-
 	ctx := context.Background()
-	dbConfig := database.LoadConfig()
-	connStr := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Password,
-		dbConfig.DBName, dbConfig.SSLMode,
-	)
-	sqlDB, err := sql.Open("postgres", connStr)
-	if err != nil {
-		log.Fatal("Failed to open database connection:", err)
-	}
-	defer sqlDB.Close()
+	cfg := config.Load()
 
-	// migrationsPath := os.Getenv("MIGRATIONS_PATH")
-	// if migrationsPath == "" {
-	// 	cwd, err := os.Getwd()
-	// 	if err != nil {
-	// 		log.Fatal("Failed to get current directory:", err)
-	// 	}
-	// 	migrationsPath = filepath.Join(cwd, "migrations")
-	//
-	// 	if _, err := os.Stat(migrationsPath); os.IsNotExist(err) {
-	// 		migrationsPath = "/app/migrations"
-	// 	}
-	// }
-	//
-	// log.Printf("Using migrations path: %s", migrationsPath)
-	//
-	// migrator := database.NewMigrator("../../internal/database/migrations")
-	// if err := migrator.RunMigrations(sqlDB, dbConfig.DBName); err != nil {
-	// 	panic(fmt.Sprintf("failed to run migrations: %s", err))
-	// }
-
-	pool, err := database.NewPool(ctx, dbConfig)
+	pool, err := database.NewPool(ctx, cfg)
 	if err != nil {
 		panic(fmt.Sprintf("database error: %s", err))
 	}
 	defer pool.Close()
 
-	server := server.NewServer(server.ServerProps{DB: pool})
+	server := server.NewServer(server.ServerProps{DB: pool, Config: cfg})
 
 	// Create a done channel to signal when the shutdown is complete
 	done := make(chan bool, 1)

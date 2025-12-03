@@ -4,43 +4,21 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
+	"multistep-registration/internal/config"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type Config struct {
-	Host     string
-	Port     string
-	User     string
-	Password string
-	DBName   string
-	SSLMode  string
-}
-
-func LoadConfig() Config {
-	return Config{
-		Host:     getEnv("DB_HOST", "localhost"),
-		Port:     getEnv("DB_PORT", "5432"),
-		User:     getEnv("DB_USER", "postgres"),
-		Password: getEnv("DB_PASSWORD", "postgres"),
-		DBName:   getEnv("DB_NAME", "registration_db"),
-		SSLMode:  getEnv("DB_SSLMODE", "disable"),
-	}
-}
-
-func getEnv(key, defaultValue string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return defaultValue
-}
-
-func NewPool(ctx context.Context, config Config) (*pgxpool.Pool, error) {
+func NewPool(ctx context.Context, config *config.Config) (*pgxpool.Pool, error) {
 	connString := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		config.Host, config.Port, config.User, config.Password, config.DBName, config.SSLMode,
+		config.Database.Host,
+		config.Database.Port,
+		config.Database.User,
+		config.Database.Password,
+		config.Database.DBName,
+		config.Database.SSLMode,
 	)
 
 	poolConfig, err := pgxpool.ParseConfig(connString)
@@ -48,6 +26,7 @@ func NewPool(ctx context.Context, config Config) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("failed to parse connection string: %w", err)
 	}
 
+	// TODO: Add to config and env vars
 	poolConfig.MaxConns = 10
 	poolConfig.MinConns = 2
 	poolConfig.HealthCheckPeriod = 1 * time.Minute
