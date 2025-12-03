@@ -11,9 +11,6 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// FIX: If request is missing in context I should handle this. Because now if its missing everything is skipped.
-// I'd live to avoid it.
-
 // RequiredFieldsValidator validates that required fields are present
 func RequiredFieldsValidator() Validator {
 	return func(c *gin.Context) []Error {
@@ -41,10 +38,7 @@ func RequiredFieldsValidator() Validator {
 // EmailFormatValidator validates email format
 func EmailFormatValidator() Validator {
 	return func(c *gin.Context) []Error {
-		req, exists := context.GetRegistrationRequest(c)
-		if !exists {
-			return nil
-		}
+		req := context.MustGetRegistrationRequest(c)
 
 		emailRegex := `^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`
 
@@ -62,10 +56,7 @@ func EmailFormatValidator() Validator {
 // PasswordStrengthValidator validates password strength
 func PasswordStrengthValidator() Validator {
 	return func(c *gin.Context) []Error {
-		req, exists := context.GetRegistrationRequest(c)
-		if !exists {
-			return nil
-		}
+		req := context.MustGetRegistrationRequest(c)
 
 		if len(req.Password) < 8 {
 			return []Error{{
@@ -125,10 +116,7 @@ func PasswordStrengthValidator() Validator {
 // PasswordMatchValidator validates password confirmation
 func PasswordMatchValidator() Validator {
 	return func(c *gin.Context) []Error {
-		req, exists := context.GetRegistrationRequest(c)
-		if !exists {
-			return nil
-		}
+		req := context.MustGetRegistrationRequest(c)
 
 		if req.Password != req.ConfirmPassword {
 			return []Error{{
@@ -144,10 +132,7 @@ func PasswordMatchValidator() Validator {
 // UsernameFormatValidator validates username format
 func UsernameFormatValidator() Validator {
 	return func(c *gin.Context) []Error {
-		req, exists := context.GetRegistrationRequest(c)
-		if !exists {
-			return nil
-		}
+		req := context.MustGetRegistrationRequest(c)
 
 		usernameRegex := `^[a-zA-Z0-9]{6,50}$`
 
@@ -165,10 +150,7 @@ func UsernameFormatValidator() Validator {
 // TermsAcceptanceValidator validates terms acceptance
 func TermsAcceptanceValidator() Validator {
 	return func(c *gin.Context) []Error {
-		req, exists := context.GetRegistrationRequest(c)
-		if !exists {
-			return nil
-		}
+		req := context.MustGetRegistrationRequest(c)
 
 		if !req.AcceptTerms {
 			return []Error{{
@@ -221,10 +203,7 @@ func CountryEmailDomainValidator() Validator {
 // PhoneNumberValidator validates phone number format
 func PhoneNumberValidator() Validator {
 	return func(c *gin.Context) []Error {
-		req, exists := context.GetRegistrationRequest(c)
-		if !exists {
-			return nil
-		}
+		req := context.MustGetRegistrationRequest(c)
 
 		if req.PhoneNumber != nil && *req.PhoneNumber != "" {
 			phoneRegex := `^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$`

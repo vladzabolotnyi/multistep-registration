@@ -30,6 +30,7 @@ func NewValidationChain() *Chain {
 func CreateDefaultRegistrationChain() *Chain {
 	chain := NewValidationChain()
 
+	// RequiredFieldsValidator is setting request in context, the order matters
 	chain.Add(RequiredFieldsValidator())
 	chain.Add(EmailFormatValidator())
 	chain.Add(PasswordStrengthValidator())

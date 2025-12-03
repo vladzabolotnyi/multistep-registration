@@ -3,7 +3,7 @@ package server
 import (
 	"log"
 	"net/http"
-	"time"
+	"runtime/debug"
 
 	"github.com/gin-gonic/gin"
 )
@@ -48,62 +48,33 @@ func (mc *MiddlewareChain) Then(handler gin.HandlerFunc) gin.HandlerFunc {
 	}
 }
 
-// LoggingMiddleware logs request details
-func LoggingMiddleware() Middleware {
+func LoggingMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		start := time.Now()
+		log.Printf("Request: %s %s", c.Request.Method, c.Request.URL.Path)
 
-		// Process request
 		c.Next()
 
-		// Log after request is processed
-		latency := time.Since(start)
-		log.Printf("%s %s %d %s",
-			c.Request.Method,
-			c.Request.URL.Path,
-			c.Writer.Status(),
-			latency,
-		)
+		log.Printf("Response: %s %s - %d",
+			c.Request.Method, c.Request.URL.Path, c.Writer.Status())
 	}
 }
 
-// CORSMiddleware handles CORS headers
-func CORSMiddleware() Middleware {
-	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
-
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(http.StatusNoContent)
-			return
-		}
-
-		c.Next()
-	}
-}
-
-// JSONMiddleware sets content type to JSON
-func JSONMiddleware() Middleware {
-	return func(c *gin.Context) {
-		c.Writer.Header().Set("Content-Type", "application/json")
-		c.Next()
-	}
-}
-
-// ErrorHandlerMiddleware catches panics and returns proper error responses
-func ErrorHandlerMiddleware() Middleware {
+func RecoveryMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
-				log.Printf("Panic recovered: %v", err)
+				stack := debug.Stack()
+				log.Printf("PANIC RECOVERED: %v\n%s", err, stack)
+
 				c.JSON(http.StatusInternalServerError, gin.H{
 					"code":    "INTERNAL_ERROR",
 					"message": "An unexpected error occurred",
 				})
+
+				c.Abort()
 			}
 		}()
+
 		c.Next()
 	}
 }

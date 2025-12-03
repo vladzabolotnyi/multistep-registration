@@ -10,7 +10,6 @@ import (
 
 func (s *Server) RegisterRoutes() http.Handler {
 	r := gin.Default()
-	registrationChain := validation.CreateDefaultRegistrationChain()
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173"},
@@ -18,12 +17,15 @@ func (s *Server) RegisterRoutes() http.Handler {
 		AllowHeaders:     []string{"Accept", "Authorization", "Content-Type"},
 		AllowCredentials: true,
 	}))
-	api := r.Group("/api")
-	{
-		api.POST("/register", registrationChain.Middleware(), s.Register)
 
-		api.GET("/check-username", s.CheckUsername)
-		api.GET("/check-email", s.CheckEmail)
+	apiGroup := r.Group("/api")
+	apiGroup.Use(RecoveryMiddleware(), LoggingMiddleware())
+	{
+		registrationChain := validation.CreateDefaultRegistrationChain()
+		apiGroup.POST("/register", registrationChain.Middleware(), s.Register)
+
+		apiGroup.GET("/check-username", s.CheckUsername)
+		apiGroup.GET("/check-email", s.CheckEmail)
 	}
 
 	// // Serve frontend static files

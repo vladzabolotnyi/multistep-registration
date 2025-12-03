@@ -30,30 +30,36 @@ func GetRegistrationRequest(c *gin.Context) (*domain.RegistrationRequest, bool) 
 	return req, true
 }
 
-func MustGetRegistrationRequest(c *gin.Context) (*domain.RegistrationRequest, error) {
+func GetRegistrationRequestOrError(c *gin.Context) (*domain.RegistrationRequest, error) {
 	req, exists := GetRegistrationRequest(c)
 	if !exists {
-		return nil, gin.Error{
-			Err:  ErrRequestNotFound,
-			Type: gin.ErrorTypePublic,
-			Meta: "Registration request not found in context",
-		}
+		return nil, ErrRequestNotFound
 	}
 	return req, nil
+}
+
+// MustGetRegistrationRequest gets registration request from context or panics
+// Use only when you're 100% sure the request should be there
+func MustGetRegistrationRequest(c *gin.Context) *domain.RegistrationRequest {
+	req, err := GetRegistrationRequestOrError(c)
+	if err != nil {
+		panic(err)
+	}
+	return req
 }
 
 var (
 	ErrRequestNotFound = NewContextError("request not found in context")
 )
 
-type ContextError struct {
+type Error struct {
 	message string
 }
 
-func NewContextError(message string) *ContextError {
-	return &ContextError{message: message}
+func NewContextError(message string) *Error {
+	return &Error{message: message}
 }
 
-func (e *ContextError) Error() string {
+func (e *Error) Error() string {
 	return e.message
 }
