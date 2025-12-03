@@ -72,7 +72,8 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({
     }, [])
 
     const loadStates = useCallback(
-        async (countryCode: string, forceRefresh = false) => {
+        async (countryName: string, forceRefresh = false) => {
+            const countryCode = countries.find((c) => c.name === countryName)?.code
             if (!countryCode) {
                 setStates([])
                 setSelectedCountry(null)
