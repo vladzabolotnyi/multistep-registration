@@ -1,18 +1,21 @@
 package config
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 )
 
 type Config struct {
 	Database struct {
-		Host     string
-		Port     string
-		User     string
-		Password string
-		DBName   string
-		SSLMode  string
+		Host           string
+		Port           string
+		User           string
+		Password       string
+		DBName         string
+		SSLMode        string
+		MigrationsPath string
 	}
 	Server struct {
 		Port         int
@@ -27,6 +30,13 @@ type Config struct {
 func Load() *Config {
 	var cfg Config
 
+	migrationsPath := getEnv("DB_MIGRATIONS_PATH", "./migrations")
+	absMigrationsPath, err := filepath.Abs(migrationsPath)
+	if err != nil {
+		fmt.Printf("could not get absolute path for migrations: %v\n", err)
+		absMigrationsPath = migrationsPath
+	}
+
 	// Database
 	cfg.Database.Host = getEnv("DB_HOST", "localhost")
 	cfg.Database.Port = getEnv("DB_PORT", "5432")
@@ -34,6 +44,7 @@ func Load() *Config {
 	cfg.Database.Password = getEnv("DB_PASSWORD", "postgres")
 	cfg.Database.DBName = getEnv("DB_NAME", "registration_db")
 	cfg.Database.SSLMode = getEnv("DB_SSLMODE", "disable")
+	cfg.Database.MigrationsPath = absMigrationsPath
 
 	// Server
 	cfg.Server.Port = getEnvAsInt("PORT", 8080)

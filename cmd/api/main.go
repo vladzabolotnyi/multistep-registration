@@ -40,16 +40,27 @@ func gracefulShutdown(apiServer *http.Server, done chan bool) {
 }
 
 func main() {
-	ctx := context.Background()
 	cfg := config.Load()
 
-	pool, err := database.NewPool(ctx, cfg)
-	if err != nil {
-		panic(fmt.Sprintf("database error: %s", err))
-	}
-	defer pool.Close()
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
-	server := server.NewServer(server.ServerProps{DB: pool, Config: cfg})
+	db, err := database.NewDatabase(ctx, cfg)
+	if err != nil {
+		log.Fatalf("failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	migrator := database.NewMigrator(cfg.Database.MigrationsPath)
+	if version, dirty, err := migrator.CheckMigrationsStatus(db.SQL, cfg.Database.DBName); err == nil {
+		log.Printf("Current migration version: %d, dirty: %v", version, dirty)
+	}
+
+	if err := migrator.RunMigrations(db.SQL, cfg.Database.DBName); err != nil {
+		log.Fatalf("Failed to run migrations: %v", err)
+	}
+
+	server := server.NewServer(server.ServerProps{DB: db.Pool, Config: cfg})
 
 	// Create a done channel to signal when the shutdown is complete
 	done := make(chan bool, 1)
