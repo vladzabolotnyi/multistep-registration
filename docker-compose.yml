@@ -47,6 +47,7 @@ services:
       DB_SSLMODE: ${DB_SSLMODE:-disable}
 
       PASSWORD_COST: ${PASSWORD_COST:-12}
+      DB_MIGRATIONS_PATH: ./migrations
     depends_on:
       postgres:
         condition: service_healthy
