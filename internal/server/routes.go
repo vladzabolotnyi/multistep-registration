@@ -28,5 +28,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 		apiGroup.GET("/check-email", s.CheckEmail)
 	}
 
+	r.GET("/health", s.healthHandler)
+	r.GET("/ready", s.readinessHandler)
+
 	return r
 }
