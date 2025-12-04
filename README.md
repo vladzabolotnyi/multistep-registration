@@ -219,3 +219,5 @@ Testing Approach:
 6. **Database:**
    - PostgreSQL for production reliability
    - SQLC provides generic interface to apply any SQL database but before switching you have to adjust extensions and types in migrations
+7. **API KEY in code**
+   - API key to fetch regions was intentionally added to the repo just for demonstration purpose
