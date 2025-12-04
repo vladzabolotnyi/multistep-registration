@@ -77,10 +77,7 @@ export const accountSchema = z
             .string()
             .min(6, 'Username must be at least 6 characters')
             .max(30, 'Username cannot exceed 30 characters')
-            .regex(
-                /^[a-zA-Z0-9_]+$/,
-                'Username can only contain letters, numbers, and underscores',
-            ),
+            .regex(/^[a-zA-Z0-9]+$/, 'Username can only contain letters and numbers'),
 
         password: z
             .string()
@@ -88,7 +85,7 @@ export const accountSchema = z
             .max(50, 'Password cannot exceed 50 characters')
             .regex(
                 passwordRegex,
-                'Password must include: uppercase letter, lowercase letter, number, and special character (@$!%*?&)',
+                'Password must include: uppercase letter, lowercase letter, number, and special character',
             ),
 
         confirmPassword: z.string(),

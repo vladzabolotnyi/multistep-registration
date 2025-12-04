@@ -64,10 +64,10 @@ func PasswordStrengthValidator() Validator {
 				Message: "Password must be at least 8 characters long",
 			}}
 		}
-		if len(req.Password) > 72 {
+		if len(req.Password) > 50 {
 			return []Error{{
 				Field:   "password",
-				Message: "Password must be 72 characters long at max",
+				Message: "Password must be 50 characters long at max",
 			}}
 		}
 
@@ -164,43 +164,6 @@ func TermsAcceptanceValidator() Validator {
 				Message: "You must accept the terms and conditions",
 			}}
 		}
-
-		return nil
-	}
-}
-
-// CountryEmailDomainValidator validates country/email domain match (cross-field validation)
-// FIX: Fix this validator
-func CountryEmailDomainValidator() Validator {
-	return func(c *gin.Context) []Error {
-		// req, exists := c.Get("registrationRequest")
-		// if !exists {
-		// 	return nil
-		// }
-
-		// registrationReq := req.(domain.RegistrationRequest)
-
-		// // Example: If country is US, require common US domains
-		// if registrationReq.Country == "US" {
-		// 	usDomains := []string{".com", ".org", ".edu", ".gov", ".net"}
-		// 	emailLower := strings.ToLower(registrationReq.Email)
-		//
-		// 	hasValidDomain := false
-		// 	for _, domain := range usDomains {
-		// 		if strings.HasSuffix(emailLower, domain) {
-		// 			hasValidDomain = true
-		// 			break
-		// 		}
-		// 	}
-		//
-		// 	if !hasValidDomain {
-		// 		return []Error{{
-		// 			Field:   "email",
-		// 			Message: "For US registrations, please use a .com, .org, .edu, .gov, or .net email address",
-		// 			Code:    "INVALID_EMAIL_DOMAIN_FOR_COUNTRY",
-		// 		}}
-		// 	}
-		// }
 
 		return nil
 	}

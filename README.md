@@ -2,6 +2,16 @@
 
 A full-stack user registration application featuring a multi-step form with React frontend and Go backend, implementing comprehensive validation, middleware chains, and database persistence.
 
+## DEMO
+
+### Success flow
+
+![Success flow](https://github.com/user-attachments/assets/011df03c-cabb-4f18-a545-1bd5e1320642)
+
+### Validation rules flow
+
+![Validation rules flow](https://github.com/user-attachments/assets/907e0c4c-e992-428d-86c3-1fa992775cd0)
+
 ## 📋 Table of Contents
 
 - [Features](#features)
@@ -143,25 +153,45 @@ make run
 
 ## 🧪 Running Tests
 
-### Backend Tests
+### Testing Strategy
 
-```bash
-# Run all tests
-make test
+While tests are not currently implemented due to time constraints, here's the comprehensive testing approach planned for this project:
 
-# Run with coverage
-go test ./... -v -race -cover
+1. Frontend Testing
+   Testing Stack:
 
-# Run specific package tests
-go test ./internal/validation/... -v
-```
+- Jest - Primary testing framework
+- React Testing Library - Component testing utilities
+- MSW (Mock Service Worker) - API response stubbing
 
-### Frontend Tests
+Testing Approach:
 
-```bash
-cd frontend
-npm test
-```
+Presentational Components: Utilize snapshot testing to ensure UI renders correctly and catches unintended visual regressions
+Container Components/Pages: Implement integration tests focusing on user workflows and component interactions
+API Service Layer: Mock API calls to verify correct request formatting, response handling, and error scenarios
+
+Multi-Step Form Testing:
+For the multi-step form implementation, tests would include:
+
+Helper functions to simulate form progression through each step
+Validation testing for each input field at every step
+End-to-end submission flow testing, including success/error response handling
+State management verification across form steps
+
+### Backend Testing
+
+Testing Stack:
+
+- Testify - Assertion library and test suites
+- GoMock - Mock generation for interfaces
+- Godog (optional) - BDD framework for behavior-driven development if adopted project-wide
+
+Testing Approach:
+
+Unit Tests: Isolated testing of validators, utilities, and pure functions
+Integration Tests: Service layer and HTTP handlers with mocked database interactions
+Database Layer: Mock repository calls to verify correct query execution and data handling
+API Contracts: Ensure request/response schemas match documentation
 
 ## 📝 Assumptions
 
@@ -177,7 +207,7 @@ npm test
 3. **Password Requirements:**
    - Minimum 8 characters
    - Must include: uppercase, lowercase, number, special character
-   - bcrypt has restriction with 72 bytes long
+   - bcrypt has restriction with 72 bytes long but intentionally restrictred with 50
 
 4. **Phone Number:**
    - Optional field
