@@ -28,15 +28,5 @@ func (s *Server) RegisterRoutes() http.Handler {
 		apiGroup.GET("/check-email", s.CheckEmail)
 	}
 
-	// // Serve frontend static files
-	// r.Static("/static", "./frontend/dist/assets")
-	// r.StaticFile("/", "./frontend/dist/index.html")
-	// r.StaticFile("/index.html", "./frontend/dist/index.html")
-	//
-	// // Catch-all for SPA routing
-	// r.NoRoute(func(c *gin.Context) {
-	// 	c.File("./frontend/dist/index.html")
-	// })
-
 	return r
 }
