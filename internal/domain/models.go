@@ -30,18 +30,18 @@ type User struct {
 }
 
 type RegistrationRequest struct {
-	FirstName   string  `json:"firstName" binding:"required,min=1,max=100"`
-	LastName    string  `json:"lastName" binding:"required,min=1,max=100"`
-	Email       string  `json:"email" binding:"required,email"`
+	FirstName   string  `json:"firstName" binding:"required,min=1,max=50"`
+	LastName    string  `json:"lastName" binding:"required,min=1,max=50"`
+	Email       string  `json:"email" binding:"required,email,min=1,max=100"`
 	PhoneNumber *string `json:"phoneNumber,omitempty" binding:"omitempty,min=10,max=20"`
 
-	StreetAddress string `json:"streetAddress" binding:"required,min=1,max=255"`
+	StreetAddress string `json:"streetAddress" binding:"required,min=1,max=200"`
 	City          string `json:"city" binding:"required,min=1,max=100"`
 	State         string `json:"state" binding:"required,min=1,max=100"`
 	Country       string `json:"country" binding:"required,min=1,max=100"`
 
-	Username        string `json:"username" binding:"required,min=6,max=50,alphanum"`
-	Password        string `json:"password" binding:"required,min=8,max=72"`
+	Username        string `json:"username" binding:"required,min=6,max=30,alphanum"`
+	Password        string `json:"password" binding:"required,min=8,max=50"`
 	ConfirmPassword string `json:"confirmPassword" binding:"required,eqfield=Password"`
 
 	AcceptTerms bool `json:"acceptTerms" binding:"required,eq=true"`
