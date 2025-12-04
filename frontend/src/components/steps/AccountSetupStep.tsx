@@ -67,7 +67,14 @@ const AccountSetupStep: React.FC = () => {
         }, 1000)
 
         return () => clearTimeout(timeoutId)
-    }, [username, checkUsername, setError, clearErrors, resetUsernameCheck])
+    }, [
+        username,
+        checkUsername,
+        setError,
+        clearErrors,
+        resetUsernameCheck,
+        errors.username,
+    ])
 
     useEffect(() => {
         if (password) {
@@ -121,7 +128,7 @@ const AccountSetupStep: React.FC = () => {
                     placeholder="Choose a username"
                     error={validationError || (errors.username?.message as string)}
                     {...register('username')}
-                    helperText="Minimum 6 characters, letters, numbers, and underscores only"
+                    helperText="Minimum 6 characters, letters and numbers only"
                     required
                     leftIcon={<FaUser />}
                     rightIcon={getUsernameRightIcon()}
