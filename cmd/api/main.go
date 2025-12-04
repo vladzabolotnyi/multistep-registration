@@ -51,7 +51,7 @@ func main() {
 		log.Fatalf("Failed to run migrations: %v", err)
 	}
 
-	server := server.NewServer(server.ServerProps{DB: db.Pool, Config: cfg})
+	server := server.NewServer(server.ServerProps{Config: cfg, Database: db})
 
 	done := make(chan bool, 1)
 

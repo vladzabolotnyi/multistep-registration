@@ -3,7 +3,7 @@ package server
 import (
 	"fmt"
 	"multistep-registration/internal/config"
-	database "multistep-registration/internal/database/sqlc"
+	"multistep-registration/internal/database"
 	"multistep-registration/internal/repository"
 	"multistep-registration/internal/service"
 	"net/http"
@@ -13,22 +13,24 @@ import (
 )
 
 type ServerProps struct {
-	Config *config.Config
-	DB     database.DBTX
+	Config   *config.Config
+	Database *database.Database
 }
 
 type Server struct {
 	port int
 
+	db          *database.Database
 	userService service.UserService
 }
 
 func NewServer(props ServerProps) *http.Server {
 	NewServer := &Server{
 		port: props.Config.Server.Port,
+		db:   props.Database,
 	}
 
-	userRepo := repository.NewUserRepository(props.DB)
+	userRepo := repository.NewUserRepository(props.Database.Pool)
 	userService := service.NewUserService(userRepo, props.Config.Security.PasswordCost)
 	NewServer.userService = userService
 
