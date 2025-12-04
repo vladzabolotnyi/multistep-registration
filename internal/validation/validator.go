@@ -38,7 +38,6 @@ func CreateDefaultRegistrationChain() *Chain {
 	chain.Add(PasswordMatchValidator())
 	chain.Add(UsernameFormatValidator())
 	chain.Add(TermsAcceptanceValidator())
-	chain.Add(CountryEmailDomainValidator())
 	chain.Add(PhoneNumberValidator())
 
 	return chain
