@@ -142,9 +142,7 @@ make run
 - Frontend: http://localhost:5173
 - Backend: http://localhost:8080
 
-## 🧪 Running Tests
-
-### Testing Strategy
+## 🧪 Testing strategy
 
 While tests are not currently implemented due to time constraints, here's the comprehensive testing approach planned for this project:
 
