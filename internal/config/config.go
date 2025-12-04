@@ -30,7 +30,7 @@ type Config struct {
 func Load() *Config {
 	var cfg Config
 
-	migrationsPath := getEnv("DB_MIGRATIONS_PATH", "./migrations")
+	migrationsPath := getEnv("DB_MIGRATIONS_PATH", "internal/database/migrations/")
 	absMigrationsPath, err := filepath.Abs(migrationsPath)
 	if err != nil {
 		fmt.Printf("could not get absolute path for migrations: %v\n", err)

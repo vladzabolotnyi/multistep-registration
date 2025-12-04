@@ -115,13 +115,12 @@ make docker-run
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:8080
 - Health Check: http://localhost:8080/health
+- Readyness Check: http://localhost:8080/ready
 
 5. **Stop services**
 
 ```bash
 make docker-down
-# or
-docker compose down
 ```
 
 ### Option 2: Local Development
@@ -132,15 +131,7 @@ docker compose down
 make db-up
 ```
 
-2. **Install backend dependencies**
-
-```bash
-go mod download
-```
-
-3. **Run database migrations** (automatic on app start)
-
-4. **Start backend**
+2. **Run applications**
 
 ```bash
 make run
@@ -156,8 +147,10 @@ make run
 ### Testing Strategy
 
 While tests are not currently implemented due to time constraints, here's the comprehensive testing approach planned for this project:
+
 #### Frontend Testing
-   Testing Stack:
+
+Testing Stack:
 
 - Jest - Primary testing framework
 - React Testing Library - Component testing utilities
@@ -171,6 +164,7 @@ Testing Approach:
 
 Multi-Step Form Testing:
 For the multi-step form implementation, tests would include:
+
 1. Helper functions to simulate form progression through each stepx.
 2. Validation testing for each input field at every step
 3. End-to-end submission flow testing, including success/error response handling
