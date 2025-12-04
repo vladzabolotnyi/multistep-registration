@@ -187,7 +187,7 @@ npm test
 3. **Password Requirements:**
    - Minimum 8 characters
    - Must include: uppercase, lowercase, number, special character
-   - bcrypt has restriction with 72 bytes long
+   - bcrypt has restriction with 72 bytes long but intentionally restrictred with 50
 
 4. **Phone Number:**
    - Optional field
