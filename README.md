@@ -2,6 +2,16 @@
 
 A full-stack user registration application featuring a multi-step form with React frontend and Go backend, implementing comprehensive validation, middleware chains, and database persistence.
 
+## DEMO
+
+### Success flow
+
+![Success flow](https://github.com/user-attachments/assets/011df03c-cabb-4f18-a545-1bd5e1320642)
+
+### Validation rules flow
+
+![Validation rules flow](https://github.com/user-attachments/assets/907e0c4c-e992-428d-86c3-1fa992775cd0)
+
 ## 📋 Table of Contents
 
 - [Features](#features)
