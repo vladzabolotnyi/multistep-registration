@@ -11,10 +11,10 @@ import (
 )
 
 type HealthResponse struct {
-	Status    string                 `json:"status"`
-	Timestamp time.Time              `json:"timestamp"`
-	Services  map[string]interface{} `json:"services"`
-	Version   string                 `json:"version,omitempty"`
+	Status    string         `json:"status"`
+	Timestamp time.Time      `json:"timestamp"`
+	Services  map[string]any `json:"services"`
+	Version   string         `json:"version,omitempty"`
 }
 
 func (s *Server) healthHandler(c *gin.Context) {

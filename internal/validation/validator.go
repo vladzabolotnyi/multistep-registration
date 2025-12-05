@@ -7,21 +7,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Validator is a function that validates a request
 type Validator func(c *gin.Context) []Error
 
-// Chain represents a chain of validators
 type Chain struct {
 	validators []Validator
 }
 
-// Error represents a validation error
 type Error struct {
 	Field   string `json:"field"`
 	Message string `json:"message"`
 }
 
-// NewValidationChain creates a new validation chain
 func NewValidationChain() *Chain {
 	return &Chain{
 		validators: []Validator{},
@@ -43,12 +39,10 @@ func CreateDefaultRegistrationChain() *Chain {
 	return chain
 }
 
-// Add adds a validator to the chain
 func (vc *Chain) Add(validator Validator) {
 	vc.validators = append(vc.validators, validator)
 }
 
-// Validate runs all validators in the chain
 func (vc *Chain) Validate(c *gin.Context) []Error {
 	var allErrors []Error
 
@@ -64,7 +58,6 @@ func (vc *Chain) Validate(c *gin.Context) []Error {
 	return allErrors
 }
 
-// Middleware creates a Gin middleware from the validation chain
 func (vc *Chain) Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		errors := vc.Validate(c)

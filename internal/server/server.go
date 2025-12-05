@@ -12,7 +12,7 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 )
 
-type ServerProps struct {
+type Props struct {
 	Config   *config.Config
 	Database *database.Database
 }
@@ -24,7 +24,7 @@ type Server struct {
 	userService service.UserService
 }
 
-func NewServer(props ServerProps) *http.Server {
+func NewServer(props Props) *http.Server {
 	NewServer := &Server{
 		port: props.Config.Server.Port,
 		db:   props.Database,

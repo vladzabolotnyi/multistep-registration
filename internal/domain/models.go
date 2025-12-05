@@ -70,13 +70,3 @@ type ErrorResponse struct {
 	Message string            `json:"message"`
 	Errors  map[string]string `json:"errors,omitempty"`
 }
-
-// ValidationError is a custom error type for validation failures
-type ValidationError struct {
-	Field   string
-	Message string
-}
-
-func (e ValidationError) Error() string {
-	return e.Field + ": " + e.Message
-}
